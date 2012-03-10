@@ -37,29 +37,8 @@ task :default => [:test] do
 end
 
 task :test do
-  stage1 =  []
-  stage1 << "time ruby -I ./lib `which rspec` -b   ./test/nendo_spec.rb          -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
-  stage1 << "time ruby -I ./lib `which rspec` -b   ./test/syntax_spec.rb         -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
-  stage1 << "time ruby -I ./lib `which rspec` -b   ./test/testframework_spec.rb  -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
-  stage1 << "time ruby  -I ./lib ./bin/nendo ./test/srfi-1-test.nnd"
-  stage2 =  []
-  stage2 << "/bin/rm -f test.record"
-  stage2 << "echo "" > test.log"
-  stage2 << "time ruby -I ./lib ./bin/nendo ./test/textlib-test.nnd              >> test.log"
-  stage2 << "time ruby -I ./lib ./bin/nendo ./test/nendo-util-test.nnd           >> test.log"
-  stage2 << "time ruby -I ./lib ./bin/nendo ./test/json-test.nnd                 >> test.log"
-  stage2 << "time ruby -I ./lib ./bin/nendo ./test/srfi-2-test.nnd               >> test.log"
-  stage2 << "time ruby -I ./lib ./bin/nendo ./test/srfi-26-test.nnd              >> test.log"
-  stage2 << "time ruby -I ./lib ./bin/nendo ./test/util-list-test.nnd            >> test.log"
-  stage2 << "cat test.record"
-  arr = []
-  arr += stage1
-  arr += stage2
-  arr.each {|str|
-    sh str
-  }
+  sh "time ruby -I ./lib `which rspec` -b   ./test/internal_spec.rb          -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
 end
-
 task :test2 do
   stage1 =  []
   stage1 << "/bin/rm -f test.record"
