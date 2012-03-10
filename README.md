@@ -23,9 +23,9 @@
 <code>
     require 'distributed-rie'
     trie = DistributedTrie::Trie.create( kvs, "Sample::" )
-    trie.addKeyword!( "apple",       10 )
-    trie.addKeyword!( "application", 20 )
-    trie.addKeyword!( "orange",      30 )
+    trie.addKey!( "apple",       10 )
+    trie.addKey!( "application", 20 )
+    trie.addKey!( "orange",      30 )
     result = trie.commonPrefixSearch( "app" )
     print result;
     # =>  [ "apple", "application" ]

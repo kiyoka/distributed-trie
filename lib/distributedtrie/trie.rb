@@ -39,18 +39,20 @@ module DistributedTrie
     # kvsif ... Please implement like DistributedTrie::KvsIF class and specify instance of it.
     def initialize( kvsif, prefixString )
       @kvsif        = kvsif
-      @queue        = []
+      @req          = Hash.new
       @prefixString = prefixString
+      @key_hash     = Hash.new
     end
 
-    def addKeyword!( key, value )
-      @queue[ key ] = value
+    def addKey!( key )
+      _createTree( key )
     end
 
-    def deleteKeyword!( key )
+    def deleteKey!( key )
     end
 
     def commit!()
+      @key_hash    = Hash.new
     end
 
     def cancel()
@@ -63,20 +65,63 @@ module DistributedTrie
     end
 
 
+    def _mergeIndex( indexStr )
+      # "a$ a" => "a$"    # merge into terminal
+      # " a$"  => "a$"    # strip spaces
+      # "a$ b" => "a$ b"  # alredy merged
+
+      h = Hash.new
+      term    = Array.new
+      nonTerm = Array.new
+      indexStr.split( /[ ]+/ ).each {|entry|
+        case entry.size
+        when 1
+          nonTerm << entry
+        when 2
+          term    << entry[0..0]
+        else
+        end
+      }
+      result = term.uniq.map{ |x| x + '$' }.join( ' ' )
+      #p 'term = ', result
+      nonTerm = nonTerm.uniq.reject { |x| term.include?( x ) }
+      #p 'nonTerm  = ', nonTerm.join( ' ' )
+      if ( 0 < nonTerm.size )
+        result += ' ' + nonTerm.join( ' ' )
+      end
+      result
+    end
+
     def _createTree( key )
-      arr = []
+      h = Hash.new
       str = ''
-      key[0..(key.length)].each |c| {
-        if 0 < str.size
-          arr [ str ] = c
+      key.split( // ).each { |c|
+        val = if str.size == (key.size-1)
+                c + '$'
+              else
+                c
+              end
+        case str.size
+        when 0
+          h [ '$' ] = val
+        else
+          h [ str ] = val
         end
         str += c
       }
-      @key_arr = arr
+
+      h.keys.each{ |key|
+        if not @key_hash.has_key?( key )
+          @key_hash[ key ]  = ''
+        end
+        @key_hash[ key ] += ' ' + h[ key ]
+        @key_hash[key] = _mergeIndex( @key_hash[key] )
+      }
+      @key_hash
     end
 
     def _getInternal( type = :work )
-      @key_arr
+      @key_hash
     end
   end
 end

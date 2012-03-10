@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# trie_spec.rb -  "RSpec file for nendo language"
+# internal_spec.rb -  "RSpec file for trie internal hehavior"
 #
 #   Copyright (c) 2012     Kiyoka Nishiyama  <kiyoka@sumibi.org>
 #
@@ -53,16 +53,35 @@ class KvsForTest
 end
 
 
-describe Trie, "when initialized as '()" do
+describe Trie, "when _mergeIndex as" do
+  before do
+    @kvs  = KvsForTest.new
+    @trie = Trie.new( @kvs, "TEST::" )
+  end
+  it "should" do
+    @trie._mergeIndex( "a$ a" ).should                         == "a$"
+    @trie._mergeIndex( " a$"  ).should                         == "a$"
+    @trie._mergeIndex( "a$ b" ).should                         == "a$ b"
+    @trie._mergeIndex( "a$ a$ a$   a$" ).should                == "a$"
+    @trie._mergeIndex( "a$ a a   a a a    a   a" ).should      == "a$"
+    @trie._mergeIndex( "b b b b   b b  ").should               == " b"
+    @trie._mergeIndex( "a b c d e f g" ).should                == " a b c d e f g"
+    @trie._mergeIndex( "a$ b c$ d e$ f g$" ).should            == "a$ c$ e$ g$ b d f"
+  end
+end
+
+describe Trie, "when _createTree as" do
   before do
     @kvs  = KvsForTest.new
     @trie = Trie.new( @kvs, "TEST::" )
   end
 
   it "should" do
-    @trie.addKeyword!( "a",  10 )
-    @trie._getInternal( :work ).should = {"a" => 10 }
-    @trie.addKeyword!( "ab", 11 )
-    @trie._getInternal( :work ).should = {"a" => "b$", "ab" => 11 }
+    @trie.addKey!( "a" )
+    @trie._getInternal( :work ).should == {'$' => 'a$' }
+    @trie.addKey!( "ab" )
+    @trie._getInternal( :work ).should == {'$' => 'a$', 'a' => 'b$' }
+    @trie.addKey!( "in" )
+    @trie._getInternal( :work ).should == {'$' => 'a$ i', 'a' => 'b$', 'i' => 'n$' }
   end
 end

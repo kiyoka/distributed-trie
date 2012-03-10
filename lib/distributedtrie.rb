@@ -32,5 +32,7 @@
 #   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-require 'distributedtrie/core'
+require 'distributedtrie/kvsif'
+require 'distributedtrie/trie'
+
 
