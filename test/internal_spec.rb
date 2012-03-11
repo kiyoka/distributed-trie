@@ -161,18 +161,23 @@ describe Trie, "when search is called " do
   end
 
   it "should" do
+    @trie.addKey!( "i" )
+    @trie._getInternal( :work ).should == { ""=>"i$" }
+    @trie.addKey!( "in" )
+    @trie._getInternal( :work ).should == { ""=>"i$", "i"=>"n$" }
     @trie.addKey!( "ab1" )
-    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$"}
+    @trie._getInternal( :work ).should == { ""=>"i$ a", "i"=>"n$", "a"=>"b", "ab"=>"1$" }
     @trie.addKey!( "ab2" )
-    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$ 2$"}
+    @trie._getInternal( :work ).should == { ""=>"i$ a", "i"=>"n$", "a"=>"b", "ab"=>"1$ 2$" }
     @trie.addKey!( "ab3" )
-    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$ 2$ 3$"}
+    @trie._getInternal( :work ).should == { ""=>"i$ a", "i"=>"n$", "a"=>"b", "ab"=>"1$ 2$ 3$" }
     @trie.addKey!( "abc4" )
-    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$ 2$ 3$ c", "abc"=>"4$"}
+    @trie._getInternal( :work ).should == { ""=>"i$ a", "i"=>"n$", "a"=>"b", "ab"=>"1$ 2$ 3$ c", "abc"=>"4$" }
     @trie.commit!()
     @trie._getInternal( :work ).should == {}
     @kvs._getInternal( ).should        == [
-      ["TEST::", "a"],
+      ["TEST::", "i$ a"],
+      ["TEST::i", "n$"],
       ["TEST::a", "b"],
       ["TEST::ab", "1$ 2$ 3$ c"],
       ["TEST::abc", "4$"]]
@@ -188,14 +193,15 @@ describe Trie, "when search is called " do
     @trie.searchWith( "ab"    ){|x,y| x == y}.should    == []
     @trie.searchWith( "ab1"   ){|x,y| x == y}.should    == [ "ab1" ]
     @trie.searchWith( "abc4"  ){|x,y| x == y}.should    == [ "abc4" ]
-    @trie.searchWith( "ab"    ){|x,y| x <= y}.should    == [ "ab1", "ab2", "ab3", "abc4" ]
-    @trie.searchWith( "abc"   ){|x,y| x <= y}.should    == [ "abc4" ]
+    @trie.searchWith( "ab"    ){|x,y| x <= y}.should    == [ "in", "i", "ab1", "ab2", "ab3", "abc4" ]
+    @trie.searchWith( "abc"   ){|x,y| x <= y}.should    == [ "in", "i", "abc4" ]
     @trie.searchWith( "ab2"   ){|x,y| x >= y}.should    == [ "ab1", "ab2" ]
+    @trie.searchWith( "h"     ){|x,y| x <  y}.should    == [ "in", "i" ]
 
-    @trie.searchWith( "x"     ){|x,y| x.size == y.size}.should    == []
-    @trie.searchWith( "xx"    ){|x,y| x.size == y.size}.should    == []
-    @trie.searchWith( "xxx"   ){|x,y| x.size == y.size}.should    == [ "ab1", "ab2", "ab3" ]
-    @trie.searchWith( "xxxx"  ){|x,y| x.size == y.size}.should    == [ "ab1", "ab2", "ab3", "abc4" ]
+    @trie.searchWith( "x"     ){|x,y| x.size == y.size}.should    == [ "i" ]
+    @trie.searchWith( "xx"    ){|x,y| x.size == y.size}.should    == [ "in", "i" ]
+    @trie.searchWith( "xxx"   ){|x,y| x.size == y.size}.should    == [ "in", "i", "ab1", "ab2", "ab3" ]
+    @trie.searchWith( "xxxx"  ){|x,y| x.size == y.size}.should    == [ "in", "i", "ab1", "ab2", "ab3", "abc4" ]
 
   end
 end
