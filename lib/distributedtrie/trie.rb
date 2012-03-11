@@ -62,25 +62,6 @@ module DistributedTrie
       @key_hash    = Hash.new
     end
 
-    def _getNextLetters( node )
-      str = @kvsif.get( @prefixString + node )
-      if str
-        term    = []
-        nonTerm = []
-        str.split( /[ ]+/ ).each { |x|
-          case x.size
-          when 1
-            nonTerm << x
-          when 2
-            term    << x[0...1]
-          end
-        }
-        [ term, nonTerm ]
-      else
-        [ [], [] ]
-      end
-    end
-
     def listChilds( key )
       result = []
       (term, nonTerm) = _getNextLetters( key )
@@ -106,6 +87,49 @@ module DistributedTrie
         [key]
       else
         []
+      end
+    end
+
+    def _searchWith( key, searchKey, &block )
+      result = []
+      (term, nonTerm) = _getNextLetters( key )
+      require 'pp'
+      pp [ "_searchWith", key, term, nonTerm ]
+      (term + nonTerm).each { |x|
+        key1 = key + x
+        key2 = searchKey[0...key1.size]
+        pp [ "_check", key2, key1 ]
+        if block.call( key2, key1 )
+          pp [ '_match', key, x, searchKey ]
+          result += _searchWith( key + x, searchKey, &block )
+          if term.include?( x )
+            result << key1
+          end
+        end
+      }
+      result
+    end
+
+    def searchWith( searchKey, &block )
+      _searchWith( '', searchKey, &block )
+    end
+
+    def _getNextLetters( node )
+      str = @kvsif.get( @prefixString + node )
+      if str
+        term    = []
+        nonTerm = []
+        str.split( /[ ]+/ ).each { |x|
+          case x.size
+          when 1
+            nonTerm << x
+          when 2
+            term    << x[0...1]
+          end
+        }
+        [ term, nonTerm ]
+      else
+        [ [], [] ]
       end
     end
 

@@ -183,5 +183,19 @@ describe Trie, "when search is called " do
     @trie.exactMatchSearch( "xxx" ).should      == []
     @trie.exactMatchSearch( "abc4" ).should     == ["abc4"]
     @trie.exactMatchSearch( "abc4A" ).should    == []
+
+    @trie.searchWith( ""      ){|x,y| x == y}.should    == []
+    @trie.searchWith( "ab"    ){|x,y| x == y}.should    == []
+    @trie.searchWith( "ab1"   ){|x,y| x == y}.should    == [ "ab1" ]
+    @trie.searchWith( "abc4"  ){|x,y| x == y}.should    == [ "abc4" ]
+    @trie.searchWith( "ab"    ){|x,y| x <= y}.should    == [ "ab1", "ab2", "ab3", "abc4" ]
+    @trie.searchWith( "abc"   ){|x,y| x <= y}.should    == [ "abc4" ]
+    @trie.searchWith( "ab2"   ){|x,y| x >= y}.should    == [ "ab1", "ab2" ]
+
+    @trie.searchWith( "x"     ){|x,y| x.size == y.size}.should    == []
+    @trie.searchWith( "xx"    ){|x,y| x.size == y.size}.should    == []
+    @trie.searchWith( "xxx"   ){|x,y| x.size == y.size}.should    == [ "ab1", "ab2", "ab3" ]
+    @trie.searchWith( "xxxx"  ){|x,y| x.size == y.size}.should    == [ "ab1", "ab2", "ab3", "abc4" ]
+
   end
 end
