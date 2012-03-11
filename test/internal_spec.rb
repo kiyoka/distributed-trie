@@ -72,7 +72,7 @@ class KvsForTest
 end
 
 
-describe Trie, "when _mergeIndex as" do
+describe Trie, "when _mergeIndex is called " do
   before do
     @kvs  = KvsForTest.new
     @trie = Trie.new( @kvs, "TEST::" )
@@ -89,7 +89,7 @@ describe Trie, "when _mergeIndex as" do
   end
 end
 
-describe Trie, "when _createTree as" do
+describe Trie, "when _createTree is called " do
   before do
     @kvs  = KvsForTest.new
     @trie = Trie.new( @kvs, "TEST::" )
@@ -105,7 +105,7 @@ describe Trie, "when _createTree as" do
   end
 end
 
-describe Trie, "when _commit as" do
+describe Trie, "when _commit is called " do
   before do
     @kvs  = KvsForTest.new
     @trie = Trie.new( @kvs, "TEST::" )
@@ -138,10 +138,50 @@ describe Trie, "when _commit as" do
     @trie.listChilds( "appl" ).should            == [       "apple", "application"]
     @trie.listChilds( "appli" ).should           == [                "application"]
 
+    @trie.exactMatchSearch( "" ).should          == []
+    @trie.exactMatchSearch( "ap" ).should        == []
+    @trie.exactMatchSearch( "app" ).should       == ["app"]
+    @trie.exactMatchSearch( "appl" ).should      == []
+    @trie.exactMatchSearch( "appli" ).should     == []
+    @trie.exactMatchSearch( "apple" ).should     == ["apple"]
+
     @trie.commonPrefixSearch( "" ).should        == ["app", "apple", "application"]
     @trie.commonPrefixSearch( "ap" ).should      == ["app", "apple", "application"]
     @trie.commonPrefixSearch( "app" ).should     == ["app", "apple", "application"]
     @trie.commonPrefixSearch( "appl" ).should    == [       "apple", "application"]
     @trie.commonPrefixSearch( "appli" ).should   == [                "application"]
+  end
+end
+
+
+describe Trie, "when search is called " do
+  before do
+    @kvs  = KvsForTest.new
+    @trie = Trie.new( @kvs, "TEST::" )
+  end
+
+  it "should" do
+    @trie.addKey!( "ab1" )
+    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$"}
+    @trie.addKey!( "ab2" )
+    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$ 2$"}
+    @trie.addKey!( "ab3" )
+    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$ 2$ 3$"}
+    @trie.addKey!( "abc4" )
+    @trie._getInternal( :work ).should == {""=>"a", "a"=>"b", "ab"=>"1$ 2$ 3$ c", "abc"=>"4$"}
+    @trie.commit!()
+    @trie._getInternal( :work ).should == {}
+    @kvs._getInternal( ).should        == [
+      ["TEST::", "a"],
+      ["TEST::a", "b"],
+      ["TEST::ab", "1$ 2$ 3$ c"],
+      ["TEST::abc", "4$"]]
+    @trie.exactMatchSearch( "" ).should         == []
+    @trie.exactMatchSearch( "a" ).should        == []
+    @trie.exactMatchSearch( "ab1" ).should      == ["ab1"]
+    @trie.exactMatchSearch( "ab3" ).should      == ["ab3"]
+    @trie.exactMatchSearch( "xxx" ).should      == []
+    @trie.exactMatchSearch( "abc4" ).should     == ["abc4"]
+    @trie.exactMatchSearch( "abc4A" ).should    == []
   end
 end

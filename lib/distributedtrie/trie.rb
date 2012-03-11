@@ -95,16 +95,18 @@ module DistributedTrie
     end
 
     def commonPrefixSearch( key )
-      (term, nonTerm) = _getNextLetters( key[0...(key.size-1)] )
-      #pp [ "commonPrefixSearch", key, key[0...(key.size-1)], term, nonTerm ]
-      result = []
-      if term.include?( key[-1] )
-        result << key
-      end
+      result =  exactMatchSearch( key )
       result += listChilds( key )
     end
 
-    def search( key, proc )
+    def exactMatchSearch( key )
+      (term, nonTerm) = _getNextLetters( key[0...(key.size-1)] )
+      #pp [ "exactMatchSearch", key, key[0...(key.size-1)], term, nonTerm ]
+      if term.include?( key[-1] )
+        [key]
+      else
+        []
+      end
     end
 
     def _mergeIndex( indexStr )
@@ -120,7 +122,7 @@ module DistributedTrie
         when 1
           nonTerm << entry
         when 2
-          term    << entry[0..0]
+          term    << entry[0...1]
         else
         end
       }
