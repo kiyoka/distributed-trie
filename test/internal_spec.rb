@@ -42,13 +42,32 @@ describe Trie, "Ruby version " do
 end
 
 class KvsForTest
+  def initialize()
+    @data = Hash.new
+  end
+
   def put!( key, value, timeout = 0 )
+    @data[key] = value
   end
 
   def get( key, fallback = false )
+    val = @data[key]
+    if val
+      val
+    else
+      fallback
+    end
   end
 
   def delete( key )
+  end
+
+  def _getInternal( )
+    arr = []
+    @data.keys.each { |key|
+      arr << [key,@data[key]]
+    }
+    arr
   end
 end
 
@@ -64,8 +83,8 @@ describe Trie, "when _mergeIndex as" do
     @trie._mergeIndex( "a$ b" ).should                         == "a$ b"
     @trie._mergeIndex( "a$ a$ a$   a$" ).should                == "a$"
     @trie._mergeIndex( "a$ a a   a a a    a   a" ).should      == "a$"
-    @trie._mergeIndex( "b b b b   b b  ").should               == " b"
-    @trie._mergeIndex( "a b c d e f g" ).should                == " a b c d e f g"
+    @trie._mergeIndex( "b b b b   b b  ").should               == "b"
+    @trie._mergeIndex( "a b c d e f g" ).should                == "a b c d e f g"
     @trie._mergeIndex( "a$ b c$ d e$ f g$" ).should            == "a$ c$ e$ g$ b d f"
   end
 end
@@ -78,10 +97,51 @@ describe Trie, "when _createTree as" do
 
   it "should" do
     @trie.addKey!( "a" )
-    @trie._getInternal( :work ).should == {'$' => 'a$' }
+    @trie._getInternal( :work ).should == { '' => 'a$' }
     @trie.addKey!( "ab" )
-    @trie._getInternal( :work ).should == {'$' => 'a$', 'a' => 'b$' }
+    @trie._getInternal( :work ).should == { '' => 'a$', 'a' => 'b$' }
     @trie.addKey!( "in" )
-    @trie._getInternal( :work ).should == {'$' => 'a$ i', 'a' => 'b$', 'i' => 'n$' }
+    @trie._getInternal( :work ).should == { '' => 'a$ i', 'a' => 'b$', 'i' => 'n$' }
+  end
+end
+
+describe Trie, "when _commit as" do
+  before do
+    @kvs  = KvsForTest.new
+    @trie = Trie.new( @kvs, "TEST::" )
+  end
+
+  it "should" do
+    @trie.addKey!( "app" )
+    @trie._getInternal( :work ).should == { ""=>"a", "a"=>"p", "ap"=>"p$" }
+    @trie.addKey!( "apple" )
+    @trie._getInternal( :work ).should == { ""=>"a", "a"=>"p", "ap"=>"p$", "app"=>"l", "appl"=>"e$" }
+    @trie.addKey!( "application" )
+    @trie._getInternal( :work ).should == { ""=>"a", "a"=>"p", "ap"=>"p$", "app"=>"l", "appl"=>"e$ i", "appli"=>"c", "applic"=>"a", "applica"=>"t", "applicat"=>"i", "applicati"=>"o", "applicatio"=>"n$" }
+    @trie.commit!()
+    @trie._getInternal( :work ).should == {}
+    @kvs._getInternal( ).should        == [
+      ["TEST::", "a"],
+      ["TEST::a", "p"],
+      ["TEST::ap", "p$"],
+      ["TEST::app", "l"],
+      ["TEST::appl", "e$ i"],
+      ["TEST::appli", "c"],
+      ["TEST::applic", "a"],
+      ["TEST::applica", "t"],
+      ["TEST::applicat", "i"],
+      ["TEST::applicati", "o"],
+      ["TEST::applicatio", "n$"]]
+    @trie.listChilds( "" ).should                == ["app", "apple", "application"]
+    @trie.listChilds( "ap" ).should              == ["app", "apple", "application"]
+    @trie.listChilds( "app" ).should             == [       "apple", "application"]
+    @trie.listChilds( "appl" ).should            == [       "apple", "application"]
+    @trie.listChilds( "appli" ).should           == [                "application"]
+
+    @trie.commonPrefixSearch( "" ).should        == ["app", "apple", "application"]
+    @trie.commonPrefixSearch( "ap" ).should      == ["app", "apple", "application"]
+    @trie.commonPrefixSearch( "app" ).should     == ["app", "apple", "application"]
+    @trie.commonPrefixSearch( "appl" ).should    == [       "apple", "application"]
+    @trie.commonPrefixSearch( "appli" ).should   == [                "application"]
   end
 end

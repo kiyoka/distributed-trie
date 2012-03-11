@@ -52,18 +52,60 @@ module DistributedTrie
     end
 
     def commit!()
+      @key_hash.each_key { |key|
+        @kvsif.put!( @prefixString + key, @key_hash[ key ] )
+      }
       @key_hash    = Hash.new
     end
 
     def cancel()
+      @key_hash    = Hash.new
+    end
+
+    def _getNextLetters( node )
+      str = @kvsif.get( @prefixString + node )
+      if str
+        term    = []
+        nonTerm = []
+        str.split( /[ ]+/ ).each { |x|
+          case x.size
+          when 1
+            nonTerm << x
+          when 2
+            term    << x[0...1]
+          end
+        }
+        [ term, nonTerm ]
+      else
+        [ [], [] ]
+      end
+    end
+
+    def listChilds( key )
+      result = []
+      (term, nonTerm) = _getNextLetters( key )
+      #pp [ "searchChilds", key, term, nonTerm ]
+      term.each { |x|
+        result << key + x
+      }
+      (term + nonTerm).each { |x|
+        result += listChilds( key + x )
+      }
+      result
     end
 
     def commonPrefixSearch( key )
+      (term, nonTerm) = _getNextLetters( key[0...(key.size-1)] )
+      #pp [ "commonPrefixSearch", key, key[0...(key.size-1)], term, nonTerm ]
+      result = []
+      if term.include?( key[-1] )
+        result << key
+      end
+      result += listChilds( key )
     end
 
     def search( key, proc )
     end
-
 
     def _mergeIndex( indexStr )
       # "a$ a" => "a$"    # merge into terminal
@@ -82,14 +124,9 @@ module DistributedTrie
         else
         end
       }
-      result = term.uniq.map{ |x| x + '$' }.join( ' ' )
-      #p 'term = ', result
-      nonTerm = nonTerm.uniq.reject { |x| term.include?( x ) }
-      #p 'nonTerm  = ', nonTerm.join( ' ' )
-      if ( 0 < nonTerm.size )
-        result += ' ' + nonTerm.join( ' ' )
-      end
-      result
+      arr  = term.uniq.map{ |x| x + '$' }
+      arr += nonTerm.uniq.reject { |x| term.include?( x ) }
+      arr.join( ' ' )
     end
 
     def _createTree( key )
@@ -101,12 +138,7 @@ module DistributedTrie
               else
                 c
               end
-        case str.size
-        when 0
-          h [ '$' ] = val
-        else
-          h [ str ] = val
-        end
+        h [ str ] = val
         str += c
       }
 
