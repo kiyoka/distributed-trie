@@ -39,6 +39,7 @@ end
 task :test do
   sh "time ruby -I ./lib `which rspec` -b   ./test/internal_spec.rb     -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
   sh "time ruby -I ./lib `which rspec` -b   ./test/bigdata_spec.rb      -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
+  sh "time ruby -I ./lib `which rspec` -b   ./test/usecase_spec.rb      -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
 end
 
 task :bench do
