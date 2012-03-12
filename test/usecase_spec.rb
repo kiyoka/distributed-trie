@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# usecase_spec.rb -  "RSpec file for nendo language"
+# usecase_spec.rb -  "RSpec file for ordinary usecase"
 #
 #   Copyright (c) 2012     Kiyoka Nishiyama  <kiyoka@sumibi.org>
 #
