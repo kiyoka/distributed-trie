@@ -41,40 +41,9 @@ describe Trie, "Ruby version " do
   end
 end
 
-class KvsForTest
-  def initialize()
-    @data = Hash.new
-  end
-
-  def put!( key, value, timeout = 0 )
-    @data[key] = value
-  end
-
-  def get( key, fallback = false )
-    val = @data[key]
-    if val
-      val
-    else
-      fallback
-    end
-  end
-
-  def delete( key )
-  end
-
-  def _getInternal( )
-    arr = []
-    @data.keys.each { |key|
-      arr << [key,@data[key]]
-    }
-    arr
-  end
-end
-
-
 describe Trie, "when _mergeIndex is called " do
   before do
-    @kvs  = KvsForTest.new
+    @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
   end
   it "should" do
@@ -91,7 +60,7 @@ end
 
 describe Trie, "when _createTree is called " do
   before do
-    @kvs  = KvsForTest.new
+    @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
   end
 
@@ -107,7 +76,7 @@ end
 
 describe Trie, "when _commit is called " do
   before do
-    @kvs  = KvsForTest.new
+    @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
   end
 
@@ -156,7 +125,7 @@ end
 
 describe Trie, "when search is called " do
   before do
-    @kvs  = KvsForTest.new
+    @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
   end
 

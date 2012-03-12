@@ -34,16 +34,35 @@
 #
 module DistributedTrie
 
-  # Key-Value Store Interface
-  # Please implement like this class
-  class KvsIF
+  # Example of Key-Value Store Interface
+  # Please implement your version like this.
+  class KvsIf
+    def initialize()
+      @data = Hash.new
+    end
+
     def put!( key, value, timeout = 0 )
+      @data[key] = value
     end
 
     def get( key, fallback = false )
+      val = @data[key]
+      if val
+        val
+      else
+        fallback
+      end
     end
 
     def delete( key )
+    end
+
+    def _getInternal( )
+      arr = []
+      @data.keys.each { |key|
+        arr << [key,@data[key]]
+      }
+      arr
     end
   end
 

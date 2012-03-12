@@ -35,54 +35,13 @@
 require 'distributedtrie'
 include DistributedTrie
 
-describe Trie, "Ruby version " do
-  it "should" do
-    RUBY_VERSION.match( /^1[.]8/ ).should_not be_true
-  end
-end
-
-
-class KvsForTest
-  def initialize()
-    @data = Hash.new
-  end
-
-  def put!( key, value, timeout = 0 )
-    @data[key] = value
-  end
-
-  def get( key, fallback = false )
-    val = @data[key]
-    if val
-      val
-    else
-      fallback
-    end
-  end
-
-  def delete( key )
-  end
-
-  def _getInternal( )
-    arr = []
-    @data.keys.each { |key|
-      arr << [key,@data[key]]
-    }
-    arr
-  end
-end
-
 
 describe Trie, "when initialized as '()" do
   before do
-    @kvs  = KvsForTest.new
+    @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
   end
 
   it "should" do
-    @trie.addKeyword!( "a",  10 )
-    @trie._getInternal( :work ).should = {"a" => 10 }
-    @trie.addKeyword!( "ab", 11 )
-    @trie._getInternal( :work ).should = {"a" => "b$", "ab" => 11 }
   end
 end

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# usecase_spec.rb -  "RSpec file for nendo language"
+# bigdata_spec.rb -  "RSpec file for bigdata test-case"
 #
 #   Copyright (c) 2012     Kiyoka Nishiyama  <kiyoka@sumibi.org>
 #
@@ -35,47 +35,10 @@
 require 'distributedtrie'
 include DistributedTrie
 
-describe Trie, "Ruby version " do
-  it "should" do
-    RUBY_VERSION.match( /^1[.]8/ ).should_not be_true
-  end
-end
-
-
-class KvsForTest
-  def initialize()
-    @data = Hash.new
-  end
-
-  def put!( key, value, timeout = 0 )
-    @data[key] = value
-  end
-
-  def get( key, fallback = false )
-    val = @data[key]
-    if val
-      val
-    else
-      fallback
-    end
-  end
-
-  def delete( key )
-  end
-
-  def _getInternal( )
-    arr = []
-    @data.keys.each { |key|
-      arr << [key,@data[key]]
-    }
-    arr
-  end
-end
-
 
 describe Trie, "when initialized as '()" do
   before do
-    @kvs  = KvsForTest.new
+    @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
     @arr = "0123456789abcdefghijklmnopqrstuvwxyz".split(//)
   end
