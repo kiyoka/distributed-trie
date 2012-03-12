@@ -90,28 +90,25 @@ module DistributedTrie
       end
     end
 
-    def _searchWith( key, searchKey, &block )
+    def _searchWith( key, &block )
       result = []
       (term, nonTerm) = _getNextLetters( key )
-      require 'pp'
-      pp [ "_searchWith", key, term, nonTerm ]
       (term + nonTerm).each { |x|
-        key1 = key + x
-        key2 = searchKey[0...key1.size]
-        pp [ "_check", key2, key1 ]
-        if block.call( key2, key1 )
-          pp [ '_match', key, x, searchKey ]
-          result += _searchWith( key + x, searchKey, &block )
+        arg = key + x
+        #pp [ "_check", arg ]
+        if block.call( arg )
+          #pp [ '_match', key, x ]
+          result += _searchWith( key + x, &block )
           if term.include?( x )
-            result << key1
+            result << arg
           end
         end
       }
       result
     end
 
-    def searchWith( searchKey, &block )
-      _searchWith( '', searchKey, &block )
+    def search( entryNode, &block )
+      _searchWith( entryNode, &block )
     end
 
     def _getNextLetters( node )

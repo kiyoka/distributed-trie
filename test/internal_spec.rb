@@ -189,19 +189,20 @@ describe Trie, "when search is called " do
     @trie.exactMatchSearch( "abc4" ).should     == ["abc4"]
     @trie.exactMatchSearch( "abc4A" ).should    == []
 
-    @trie.searchWith( ""      ){|x,y| x == y}.should    == []
-    @trie.searchWith( "ab"    ){|x,y| x == y}.should    == []
-    @trie.searchWith( "ab1"   ){|x,y| x == y}.should    == [ "ab1" ]
-    @trie.searchWith( "abc4"  ){|x,y| x == y}.should    == [ "abc4" ]
-    @trie.searchWith( "ab"    ){|x,y| x <= y}.should    == [ "in", "i", "ab1", "ab2", "ab3", "abc4" ]
-    @trie.searchWith( "abc"   ){|x,y| x <= y}.should    == [ "in", "i", "abc4" ]
-    @trie.searchWith( "ab2"   ){|x,y| x >= y}.should    == [ "ab1", "ab2" ]
-    @trie.searchWith( "h"     ){|x,y| x <  y}.should    == [ "in", "i" ]
+    @trie.search( '' )    {|x| x.size == 0}.should      == []
+    @trie.search( '' )    {|x| x.size == 1}.should      == ["i"]
+    @trie.search( '' )    {|x| x.size <= 2}.should      == ["in", "i"]
+    @trie.search( '' )    {|x| x.size  < 4}.should      == ["in", "i", "ab1", "ab2", "ab3"]
+    @trie.search( 'ab' )  {|x| true}.should             == ["ab1", "ab2", "ab3", "abc4"]
+    @trie.commonPrefixSearch( 'ab' ).should             == ["ab1", "ab2", "ab3", "abc4"]
+    @trie.commonPrefixSearch( 'i' ).should              == ["i", "in"]
+    @trie.commonPrefixSearch( 'in' ).should             == ["in"]
 
-    @trie.searchWith( "x"     ){|x,y| x.size == y.size}.should    == [ "i" ]
-    @trie.searchWith( "xx"    ){|x,y| x.size == y.size}.should    == [ "in", "i" ]
-    @trie.searchWith( "xxx"   ){|x,y| x.size == y.size}.should    == [ "in", "i", "ab1", "ab2", "ab3" ]
-    @trie.searchWith( "xxxx"  ){|x,y| x.size == y.size}.should    == [ "in", "i", "ab1", "ab2", "ab3", "abc4" ]
+    @trie.search( ''      ){|x| x == "ab1" }.should                        == []
+    @trie.search( 'ab'    ){|x| x == "ab1" }.should                        == ["ab1"]
+    @trie.search( 'ab'    ){|x| ( 'ab1' < x) && (x < 'ab4') }.should       == ["ab2", "ab3"]
+    @trie.search( ''      ){|x| ( '0' < x) && (x < 'z') }.should           == ["in", "i", "ab1", "ab2", "ab3", "abc4"]
 
+    @trie.search( ''      ){|x| ( 'a'  <= x) && (x <    'b') }.should      == ["ab1", "ab2", "ab3", "abc4"]
   end
 end

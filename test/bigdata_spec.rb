@@ -77,12 +77,46 @@ describe Trie, "when initialized as '()" do
   before do
     @kvs  = KvsForTest.new
     @trie = Trie.new( @kvs, "TEST::" )
+    @arr = "0123456789abcdefghijklmnopqrstuvwxyz".split(//)
   end
 
   it "should" do
-    @trie.addKeyword!( "a",  10 )
-    @trie._getInternal( :work ).should = {"a" => 10 }
-    @trie.addKeyword!( "ab", 11 )
-    @trie._getInternal( :work ).should = {"a" => "b$", "ab" => 11 }
+    @arr.each { |s1|
+      @arr.each { |s2|
+        @arr.each { |s3|
+          @trie.addKey!( s1+s2+s3 )
+        }
+      }
+    }
+
+    @trie.addKey!( "0" )
+    @trie.addKey!( "1" )
+    @trie.addKey!( "AA" )
+    @trie.addKey!( "BB" )
+
+    @trie._getInternal( :work ).size.should == 1335
+    @trie.commit!()
+
+    @trie.exactMatchSearch( "0" ).should           == ["0"]
+    @trie.exactMatchSearch( "1" ).should           == ["1"]
+    @trie.exactMatchSearch( "2" ).should           == []
+    @trie.exactMatchSearch( "AA" ).should          == ["AA"]
+    @trie.exactMatchSearch( "BB" ).should          == ["BB"]
+    @trie.exactMatchSearch( "CC" ).should          == []
+    @trie.exactMatchSearch( "aa" ).should          == []
+    @trie.exactMatchSearch( "bb" ).should          == []
+    @trie.exactMatchSearch( "aaa" ).should         == ["aaa"]
+    @trie.exactMatchSearch( "aaa" ).should         == ["aaa"]
+    @trie.exactMatchSearch( "zzz" ).should         == ["zzz"]
+    @trie.exactMatchSearch( "012" ).should         == ["012"]
+
+    @trie.commonPrefixSearch( '00' ).should        == @arr.map{ |x| "00" + x }
+    @trie.commonPrefixSearch( '' ).size.should     == (@arr.size * @arr.size * @arr.size) + 4
+    @trie.search( 'ab'  ){|x| ( 'aba'  <= x) && (x <=   'abe') }.should      == ["aba", "abb", "abc", "abd", "abe"]
+    @trie.search( 'zz'  ){|x| x.match( /zz[7-9]/ )  }.should                 == ["zz7", "zz8", "zz9"]
+
+    @trie.search( ''    ){|x| 1 == x.size }.should                           == ["0", "1"]
+    @trie.search( ''    ){|x| 2 >= x.size }.should                           == ["0", "1", "AA", "BB"]
+
   end
 end

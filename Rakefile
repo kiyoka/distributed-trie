@@ -37,20 +37,8 @@ task :default => [:test] do
 end
 
 task :test do
-  sh "time ruby -I ./lib `which rspec` -b   ./test/internal_spec.rb          -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
-end
-task :test2 do
-  stage1 =  []
-  stage1 << "/bin/rm -f test.record"
-  stage1 << "echo "" > test2.log"
-  stage1 << "time ruby -I ./lib ./bin/nendo ./test/match-test.nnd                | tee -a test2.log"
-  stage1 << "time ruby -I ./lib ./bin/nendo ./test/util-combinations-test.nnd    | tee -a test2.log"
-  stage1 << "cat test.record"
-  arr = []
-  arr += stage1
-  arr.each {|str|
-    sh str
-  }
+  sh "time ruby -I ./lib `which rspec` -b   ./test/internal_spec.rb     -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
+  sh "time ruby -I ./lib `which rspec` -b   ./test/bigdata_spec.rb      -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
 end
 
 task :bench do
