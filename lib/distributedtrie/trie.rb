@@ -32,6 +32,7 @@
 #   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
+require 'fuzzystringmatch'
 module DistributedTrie
 
   class Trie
@@ -109,6 +110,30 @@ module DistributedTrie
 
     def search( entryNode, &block )
       _searchWith( entryNode, &block )
+    end
+
+    def rangeSearch( from, to )
+      search( '' ) { |x|
+        _from = from[0...x.size]
+        _to   = to  [0...x.size]
+        ( _from <= x ) && ( x <= _to  )
+      }
+    end
+
+    def fuzzySearch( searchWord, threshold = 0.90 )
+      jarow = FuzzyStringMatch::JaroWinkler.create( )
+      search( '' ) { |x|
+        _word = searchWord[0...x.size]
+        if x.size < searchWord.size
+          (searchWord.size-x.size).times {|i|
+            _word += ' '
+            x     += ' '
+          }
+        end
+        result = jarow.getDistance( x, _word )
+        #pp [ "fuzzyString", result, x, _word ]
+        threshold <= result
+      }
     end
 
     def _getNextLetters( node )

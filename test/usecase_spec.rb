@@ -35,13 +35,64 @@
 require 'distributedtrie'
 include DistributedTrie
 
-
-describe Trie, "when initialized as '()" do
+describe Trie, "when you create auto complete application " do
   before do
     @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
   end
 
   it "should" do
+    @trie.addKey!( "i" )
+    @trie.addKey!( "in" )
+    @trie.addKey!( "inn" )
+    @trie.addKey!( "communication" )
+    @trie.addKey!( "command" )
+    @trie.addKey!( "come" )
+    @trie.addKey!( "coming" )
+    @trie.addKey!( "code" )
+    @trie.addKey!( "copy" )
+    @trie.addKey!( "copyright" )
+    @trie.commit!
+
+    @trie.commonPrefixSearch( "i" ).should       == ["i", "in", "inn"]
+    @trie.commonPrefixSearch( "in" ).should      == ["in", "inn"]
+    @trie.commonPrefixSearch( "c" ).should       == ["come", "communication", "command", "coming", "code", "copy", "copyright"]
+    @trie.commonPrefixSearch( "co" ).should      == ["come", "communication", "command", "coming", "code", "copy", "copyright"]
+    @trie.commonPrefixSearch( "comm" ).should    == ["communication", "command"]
+    @trie.commonPrefixSearch( "cod" ).should     == ["code"]
+    @trie.commonPrefixSearch( "cop" ).should     == ["copy", "copyright"]
+
+    @trie.exactMatchSearch( "copy" ).should      == ["copy"]
+  end
+end
+
+describe Trie, "when you create fuzzy-string-search application " do
+  before do
+    @kvs  = DistributedTrie::KvsIf.new
+    @trie = Trie.new( @kvs, "TEST::" )
+  end
+
+  it "should" do
+    @trie.addKey!( "communication" )
+    @trie.addKey!( "community" )
+    @trie.addKey!( "command" )
+    @trie.addKey!( "comedy" )
+    @trie.addKey!( "coming" )
+    @trie.addKey!( "code" )
+    @trie.addKey!( "copy" )
+    @trie.addKey!( "copyright" )
+    @trie.commit!
+
+    @trie.fuzzySearch( "come"           ).should    == ["comedy"]
+    @trie.fuzzySearch( "come",    0.85  ).should    == ["comedy", "code"]
+    @trie.fuzzySearch( "come",    0.82  ).should    == ["comedy", "coming", "code"]
+    @trie.fuzzySearch( "come",    0.80  ).should    == ["command", "comedy", "coming", "code"]
+
+    @trie.fuzzySearch( "comm"                 ).should    == ["command"]
+    @trie.fuzzySearch( "communication", 0.95  ).should    == ["communication", "community"]
+
+    @trie.fuzzySearch( "copylight"            ).should    == ["copyright", "copy"]
+    @trie.fuzzySearch( "copyrigh"     , 0.99  ).should    == ["copyright", "copy"]
+    @trie.fuzzySearch( "copyleft"             ).should    == ["copy"]
   end
 end

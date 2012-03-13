@@ -173,5 +173,8 @@ describe Trie, "when search is called " do
     @trie.search( ''      ){|x| ( '0' < x) && (x < 'z') }.should           == ["in", "i", "ab1", "ab2", "ab3", "abc4"]
 
     @trie.search( ''      ){|x| ( 'a'  <= x) && (x <    'b') }.should      == ["ab1", "ab2", "ab3", "abc4"]
+
+    @trie.rangeSearch( 'ab1', 'ab3' ).should           == ["ab1", "ab2", "ab3"]
+    @trie.rangeSearch( 'ab2', 'abd' ).should           == ["ab2", "ab3", "abc4"]
   end
 end
