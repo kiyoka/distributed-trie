@@ -123,7 +123,7 @@ describe Trie, "when _commit is called " do
 end
 
 
-describe Trie, "when search is called " do
+describe Trie, "when api methods are called " do
   before do
     @kvs  = DistributedTrie::KvsIf.new
     @trie = Trie.new( @kvs, "TEST::" )
@@ -176,5 +176,66 @@ describe Trie, "when search is called " do
 
     @trie.rangeSearch( 'ab1', 'ab3' ).should           == ["ab1", "ab2", "ab3"]
     @trie.rangeSearch( 'ab2', 'abd' ).should           == ["ab2", "ab3", "abc4"]
+  end
+end
+
+
+describe Trie, "when commit! are called " do
+  before do
+    @kvs  = DistributedTrie::KvsIf.new
+    @trie = Trie.new( @kvs, "TEST::" )
+  end
+
+  it "should" do
+    @trie.addKey!( "a" )
+    @trie._getInternal( :work ).should     == { ""=>"a$" }
+    @kvs._getInternal( ).should            == []
+    @trie.commit!
+    @trie._getInternal( :work ).should     == {}
+    @kvs._getInternal( ).should            == [[ "TEST::", "a$" ]]
+
+    @trie.addKey!( "b" )
+    @trie._getInternal( :work ).should     == { ""=>"b$" }
+    @kvs._getInternal( ).should            == [[ "TEST::", "a$" ]]
+    @trie.commit!
+    @trie._getInternal( :work ).should     == {}
+    @kvs._getInternal( ).should            == [[ "TEST::", "a$ b$" ]]
+
+    @trie.addKey!( "a" )
+    @trie.addKey!( "b" )
+    @trie._getInternal( :work ).should     == { ""=>"a$ b$" }
+    @kvs._getInternal( ).should            == [[ "TEST::", "a$ b$" ]]
+    @trie.commit!
+    @trie._getInternal( :work ).should     == {}
+    @kvs._getInternal( ).should            == [[ "TEST::", "a$ b$" ]]
+
+    @trie.addKey!( "01234" )
+    @trie._getInternal( :work ).should     == {""=>"0", "0"=>"1", "01"=>"2", "012"=>"3", "0123"=>"4$"}
+    @kvs._getInternal( ).should            == [[ "TEST::", "a$ b$" ]]
+    @trie.commit!
+    @trie._getInternal( :work ).should     == {}
+    @kvs._getInternal( ).should            == [
+      ["TEST::", "a$ b$ 0"],
+      ["TEST::0", "1"],
+      ["TEST::01", "2"],
+      ["TEST::012", "3"],
+      ["TEST::0123", "4$"]]
+
+    @trie.addKey!( "0123Z" )
+    @trie._getInternal( :work ).should     == {""=>"0", "0"=>"1", "01"=>"2", "012"=>"3", "0123"=>"Z$"}
+    @kvs._getInternal( ).should            == [
+      ["TEST::", "a$ b$ 0"],
+      ["TEST::0", "1"],
+      ["TEST::01", "2"],
+      ["TEST::012", "3"],
+      ["TEST::0123", "4$"]]
+    @trie.commit!
+    @trie._getInternal( :work ).should     == {}
+    @kvs._getInternal( ).should            == [
+      ["TEST::", "a$ b$ 0"],
+      ["TEST::0", "1"],
+      ["TEST::01", "2"],
+      ["TEST::012", "3"],
+      ["TEST::0123", "4$ Z$"]]
   end
 end

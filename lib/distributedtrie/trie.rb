@@ -54,7 +54,8 @@ module DistributedTrie
 
     def commit!()
       @key_hash.each_key { |key|
-        @kvsif.put!( @prefixString + key, @key_hash[ key ] )
+        cur = @kvsif.get( @prefixString + key, "" )
+        @kvsif.put!( @prefixString + key, _mergeIndex( cur + " " + @key_hash[ key ] ))
       }
       @key_hash    = Hash.new
     end
