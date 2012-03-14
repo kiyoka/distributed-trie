@@ -28,6 +28,7 @@ begin
                       ].to_a
     gemspec.add_development_dependency "rake"
     gemspec.add_development_dependency "rspec"
+    gemspec.add_dependency( "fuzzy-string-match", ">= 0.9.3" )
   end
 rescue LoadError
   puts 'Jeweler not available. If you want to build a gemfile, please install with "sudo gem install jeweler"'
