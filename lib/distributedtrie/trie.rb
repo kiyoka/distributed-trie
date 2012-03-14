@@ -95,15 +95,24 @@ module DistributedTrie
     def _searchWith( key, &block )
       result = []
       (term, nonTerm) = _getNextLetters( key )
-      (term + nonTerm).each { |x|
+      term.each { |x|
         arg = key + x
-        #pp [ "_check", arg ]
-        if block.call( arg )
-          #pp [ '_match', key, x ]
+        #pp [ "_check(1)", arg ]
+        if block.call( arg, true )
+          #pp [ '_match(1)', key, x ]
           result += _searchWith( key + x, &block )
-          if term.include?( x )
-            result << arg
-          end
+          result << arg
+        elsif block.call( arg, false )
+          #pp [ '_match(2)', key, x ]
+          result += _searchWith( key + x, &block )
+        end
+      }
+      nonTerm.each { |x|
+        arg = key + x
+        #pp [ "_check(3)", arg ]
+        if block.call( arg, false )
+          #pp [ '_match(3)', key, x ]
+          result += _searchWith( key + x, &block )
         end
       }
       result
@@ -114,7 +123,7 @@ module DistributedTrie
     end
 
     def rangeSearch( from, to )
-      search( '' ) { |x|
+      search( '' ) { |x,termFlag|
         _from = from[0...x.size]
         _to   = to  [0...x.size]
         ( _from <= x ) && ( x <= _to  )
@@ -123,16 +132,17 @@ module DistributedTrie
 
     def fuzzySearch( searchWord, threshold = 0.90 )
       jarow = FuzzyStringMatch::JaroWinkler.create( )
-      search( '' ) { |x|
-        _word = searchWord[0...x.size]
-        if x.size < searchWord.size
-          (searchWord.size-x.size).times {|i|
-            _word += ' '
+      search( '' ) { |x,termFlag|
+        _word = searchWord
+        if not termFlag and (x.size < searchWord.size)
+          _word = searchWord[0...x.size]
+          (searchWord.size-x.size).times { |i|
             x     += ' '
+            _word += ' '
           }
         end
         result = jarow.getDistance( x, _word )
-        #pp [ "fuzzyString", result, x, _word ]
+        #pp [ "fuzzyString", result, x, _word, termFlag ]
         threshold <= result
       }
     end
