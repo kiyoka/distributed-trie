@@ -40,7 +40,8 @@ end
 
 
 class KvsBench
-  LOOPTIMES = 10
+  LOOPTIMES        = 10
+  MAGNIFYING_POWER = 10
 
   def initialize( filename )
     @data = open( filename ) {|f|
@@ -53,15 +54,15 @@ class KvsBench
   def setup( )
     # Hash (on memory)
     @kvsHash = DistributedTrie::KvsIf.new
-    @data.each { |k| @kvsHash.put!( k, k ) }
+    @data.each { |k| @kvsHash.put!( k, k * MAGNIFYING_POWER ) }
 
     # dbm
     @kvsDbm  = KvsDbm.new
-    @data.each { |k|  @kvsDbm.put!( k, k ) }
+    @data.each { |k|  @kvsDbm.put!( k, k * MAGNIFYING_POWER ) }
 
     # Tokyo Cabinet
     @kvsTc   = KvsTc.new
-    @data.each { |k|   @kvsTc.put!( k, k ) }
+    @data.each { |k|   @kvsTc.put!( k, k * MAGNIFYING_POWER ) }
   end
 
   def go( )
