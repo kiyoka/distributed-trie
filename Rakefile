@@ -45,6 +45,9 @@ end
 
 task :bench do
   sh "ruby --version"
-  sh "ruby -I ./lib ./bin/nendo      ./benchmark/benchmark.nnd"
-  sh "                    nendo      ./benchmark/benchmark.nnd"
+  sh "ruby -I ./lib ./benchmark/kvs.rb ./data/aspell.dump.txt"
+end
+
+task :data do
+  sh "aspell -l en dump master > ./data/aspell.dump.txt"
 end
