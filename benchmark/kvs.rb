@@ -111,8 +111,10 @@ end
 
 def main( )
   kvsBench = KvsBench.new( ARGV[0] )
+  puts "setup..."
   kvsBench.setup
 
+  puts "main..."
   kvsBench.go
   kvsBench.printResult
 end

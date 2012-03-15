@@ -45,9 +45,11 @@ end
 
 task :bench do
   sh "ruby --version"
-  sh "ruby -I ./lib ./benchmark/kvs.rb ./data/aspell.dump.txt"
+  # URL http://www.keithv.com/software/wlist/wlist_match1.zip
+  sh "ruby -I ./lib ./benchmark/kvs.rb ./data/wlist_match1.txt"
 end
 
 task :data do
-  sh "aspell -l en dump master > ./data/aspell.dump.txt"
+  sh "aspell -l en dump master > ./data/wlist_match1.txt"
 end
+
