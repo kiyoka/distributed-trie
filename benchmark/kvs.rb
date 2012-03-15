@@ -6,7 +6,7 @@ require 'distributedtrie'
 require 'benchmark'
 require 'tokyocabinet'
 require 'dbm'
-
+require 'memcache'
 
 class KvsBase < DistributedTrie::KvsIf
   def put!( key, value, timeout = 0 )
@@ -39,6 +39,17 @@ class KvsTc < KvsBase
 end
 
 
+class KvsMemcache < KvsBase
+  def initialize( )
+    @db = MemCache.new( "localhost:11211" )
+  end
+
+  def put!( key, value, timeout = 0 )
+    @db.set( key.force_encoding("ASCII-8BIT"), value.force_encoding("ASCII-8BIT"), timeout )
+  end
+end
+
+
 class KvsBench
   LOOPTIMES        = 10
   MAGNIFYING_POWER = 10
@@ -53,16 +64,20 @@ class KvsBench
 
   def setup( )
     # Hash (on memory)
-    @kvsHash = DistributedTrie::KvsIf.new
+    @kvsHash      = DistributedTrie::KvsIf.new
     @data.each { |k| @kvsHash.put!( k, k * MAGNIFYING_POWER ) }
 
     # dbm
-    @kvsDbm  = KvsDbm.new
+    @kvsDbm       = KvsDbm.new
     @data.each { |k|  @kvsDbm.put!( k, k * MAGNIFYING_POWER ) }
 
     # Tokyo Cabinet
-    @kvsTc   = KvsTc.new
+    @kvsTc        = KvsTc.new
     @data.each { |k|   @kvsTc.put!( k, k * MAGNIFYING_POWER ) }
+
+    # Memcache
+    @kvsMemcache  = KvsMemcache.new
+    @data.each { |k|   @kvsMemcache.put!( k, k * MAGNIFYING_POWER ) }
   end
 
   def go( )
@@ -94,11 +109,18 @@ class KvsBench
       }
     }
     @arr << tms.to_a
+
+    # "[Memcached]"
+    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES})") {
+      @data.each { |k|
+        @kvsMemcache.get( k ) }
+    }
+    @arr << tms.to_a
   end
 
   def printResult( )
     @arr.each { |elem|
-      printf( "%5s %3.4f %3.4f %3.4f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
+      printf( "%20s:  %3.4f %3.4f %3.4f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
     }
   end
 
