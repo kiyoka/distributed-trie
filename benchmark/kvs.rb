@@ -70,24 +70,27 @@ class KvsBench
 
     # "[Hash]"
     tms = Benchmark.measure ("hash") {
-      @data.each { |k|
-        LOOPTIMES.times { |i| @kvsHash.get( k ) }
+      LOOPTIMES.times { |i|
+        @data.each { |k|
+          @kvsHash.get( k ) }
       }
     }
     @arr << tms.to_a
 
     # "[dbm]"
     tms = Benchmark.measure ("dbm") {
-      @data.each { |k|
-        LOOPTIMES.times { |i| @kvsDbm.get( k ) }
+      LOOPTIMES.times { |i|
+        @data.each { |k|
+          @kvsDbm.get( k ) }
       }
     }
     @arr << tms.to_a
 
     # "[Tokyo Cabinet]"
     tms = Benchmark.measure ("tc") {
-      @data.each { |k|
-        LOOPTIMES.times { |i| @kvsTc.get( k ) }
+      LOOPTIMES.times { |i|
+        @data.each { |k|
+          @kvsTc.get( k ) }
       }
     }
     @arr << tms.to_a
