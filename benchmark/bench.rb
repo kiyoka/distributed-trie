@@ -182,6 +182,41 @@ class TrieBench
     @arr << tms.to_a
   end
 
+  def sequential_trie( )
+    # "[Hash]"
+    tms = Benchmark.measure ("hash: sequential_trie") {
+      LOOPTIMES.times { |i|
+        @data.each { |k|
+          @trieHash.exactMatchSearch( k ) }
+      }
+    }
+    @arr << tms.to_a
+
+    # "[dbm]"
+    tms = Benchmark.measure ("dbm: sequential_trie") {
+      LOOPTIMES.times { |i|
+        @data.each { |k|
+          @trieDbm.exactMatchSearch( k ) }
+      }
+    }
+    @arr << tms.to_a
+
+    # "[Tokyo Cabinet]"
+    tms = Benchmark.measure ("tc: sequential_trie") {
+      LOOPTIMES.times { |i|
+        @data.each { |k|
+          @trieTc.exactMatchSearch( k ) }
+      }
+    }
+    @arr << tms.to_a
+
+    # "[Memcached]"
+    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES}): sequential_trie") {
+      @data.each { |k|
+        @trieMemcache.exactMatchSearch( k ) }
+    }
+    @arr << tms.to_a
+  end
 
   def printResult( )
     @arr.each { |elem|
@@ -211,6 +246,9 @@ def main( )
 
   puts "setup trie..."
   trieBench.setup_trie
+
+  puts "sequential trie..."
+  trieBench.sequential_trie
 
   trieBench.printResult
 end
