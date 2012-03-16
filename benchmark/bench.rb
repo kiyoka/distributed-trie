@@ -65,28 +65,28 @@ class KvsBench
 
   def setup( )
     # Hash (on memory)
-    tms = Benchmark.measure ("hash:setup") {
+    tms = Benchmark.measure ("hash: setup") {
       @kvsHash      = DistributedTrie::KvsIf.new
       @data.each { |k| @kvsHash.put!( k, k * MAGNIFYING_POWER ) }
     }
     @arr << tms.to_a
 
     # dbm
-    tms = Benchmark.measure ("dbm:setup") {
+    tms = Benchmark.measure ("dbm: setup") {
       @kvsDbm       = KvsDbm.new
       @data.each { |k|  @kvsDbm.put!( k, k * MAGNIFYING_POWER ) }
     }
     @arr << tms.to_a
 
     # Tokyo Cabinet
-    tms = Benchmark.measure ("tc:set") {
+    tms = Benchmark.measure ("tc: setup") {
       @kvsTc        = KvsTc.new
       @data.each { |k|   @kvsTc.put!( k, k * MAGNIFYING_POWER ) }
     }
     @arr << tms.to_a
 
     # Memcache
-    tms = Benchmark.measure ("memcache:setup") {
+    tms = Benchmark.measure ("memcache: setup") {
       @kvsMemcache  = KvsMemcache.new
       @data.each { |k|   @kvsMemcache.put!( k, k * MAGNIFYING_POWER ) }
     }
@@ -95,7 +95,7 @@ class KvsBench
 
   def sequential( )
     # "[Hash]"
-    tms = Benchmark.measure ("hash:sequential get") {
+    tms = Benchmark.measure ("hash: sequential_get") {
       LOOPTIMES.times { |i|
         @data.each { |k|
           @kvsHash.get( k ) }
@@ -104,7 +104,7 @@ class KvsBench
     @arr << tms.to_a
 
     # "[dbm]"
-    tms = Benchmark.measure ("dbm::sequential get") {
+    tms = Benchmark.measure ("dbm: sequential_get") {
       LOOPTIMES.times { |i|
         @data.each { |k|
           @kvsDbm.get( k ) }
@@ -113,7 +113,7 @@ class KvsBench
     @arr << tms.to_a
 
     # "[Tokyo Cabinet]"
-    tms = Benchmark.measure ("tc:sequential get") {
+    tms = Benchmark.measure ("tc: sequential_get") {
       LOOPTIMES.times { |i|
         @data.each { |k|
           @kvsTc.get( k ) }
@@ -122,7 +122,7 @@ class KvsBench
     @arr << tms.to_a
 
     # "[Memcached]"
-    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES}):sequential get") {
+    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES}): sequential_get") {
       @data.each { |k|
         @kvsMemcache.get( k ) }
     }
@@ -131,7 +131,7 @@ class KvsBench
 
   def printResult( )
     @arr.each { |elem|
-      printf( "%30s:  %7.2f %7.2f %7.2f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
+      printf( "%35s:  %7.2f %7.2f %7.2f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
     }
   end
 
