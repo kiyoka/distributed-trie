@@ -46,7 +46,7 @@ end
 task :bench do
   sh "ruby --version"
   # URL http://www.keithv.com/software/wlist/wlist_match1.zip
-  sh "ruby -I ./lib ./benchmark/bench.rb ./data/wlist_match1.txt"
+  sh "ruby -I ./lib ./benchmark/bench.rb ./data/wlist_match1.txt   false"
 end
 
 task :data do

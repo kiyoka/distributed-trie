@@ -54,14 +54,17 @@ class TrieBench
   LOOPTIMES        = 10
   MAGNIFYING_POWER = 10
 
-  def initialize( filename )
+  def initialize( filename, memcacheFlag )
     @data = open( filename ) {|f|
       f.map {|line|
         line.chomp!
       }
     }
     @arr = []
+    @memcacheFlag = memcacheFlag
   end
+
+  attr_reader :memcacheFlag
 
   def setup( )
     # Hash (on memory)
@@ -87,7 +90,11 @@ class TrieBench
 
     # Memcache
     tms = Benchmark.measure ("memcache: setup") {
-      @kvsMemcache  = KvsMemcache.new
+      if @memcacheFlag 
+        @kvsMemcache  = KvsMemcache.new
+      else
+        @kvsMemcache  = DistributedTrie::KvsIf.new
+      end
       @data.each { |k|   @kvsMemcache.put!( k, k * MAGNIFYING_POWER ) }
     }
     @arr << tms.to_a
@@ -194,7 +201,8 @@ end
 
 
 def main( )
-  trieBench = TrieBench.new( ARGV[0] )
+  trieBench = TrieBench.new( ARGV[0], "true" == ARGV[1] )
+  printf( "memcacheFlag = [%s]\n", trieBench.memcacheFlag )
   puts "setup..."
   trieBench.setup
 
