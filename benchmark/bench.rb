@@ -50,7 +50,7 @@ class KvsMemcache < KvsBase
 end
 
 
-class KvsBench
+class TrieBench
   LOOPTIMES        = 10
   MAGNIFYING_POWER = 10
 
@@ -129,6 +129,53 @@ class KvsBench
     @arr << tms.to_a
   end
 
+  def setup_trie( )
+    # Hash (on memory)
+    @trieHash = DistributedTrie::Trie.new( @kvsHash, "BENCH::" )
+    tms = Benchmark.measure ("hash: setup_trie") {
+      @data.each_with_index { |k,i|
+        @trieHash.addKey!( k )
+        @trieHash.commit! if 0 == (i % 10000)
+      }
+      @trieHash.commit!
+    }
+    @arr << tms.to_a
+
+    # dbm
+    @trieDbm  = DistributedTrie::Trie.new( @kvsDbm,  "BENCH::" )
+    tms = Benchmark.measure ("dbm: setup_trie") {
+      @data.each_with_index { |k,i|
+        @trieDbm.addKey!( k )
+        @trieDbm.commit! if 0 == (i % 10000)
+      }
+      @trieDbm.commit!
+    }
+    @arr << tms.to_a
+
+    # Tokyo Cabinet
+    @trieTc   = DistributedTrie::Trie.new( @kvsTc,   "BENCH::" )
+    tms = Benchmark.measure ("tc: setup_trie") {
+      @data.each_with_index { |k,i|
+        @trieTc.addKey!( k )
+        @trieTc.commit! if 0 == (i % 10000)
+      }
+      @trieTc.commit!
+    }
+    @arr << tms.to_a
+
+    # Memcache
+    @trieMemcache  = DistributedTrie::Trie.new( @kvsMemcache,   "BENCH::" )
+    tms = Benchmark.measure ("memcache: setup_trie") {
+      @data.each_with_index { |k,i|
+        @trieMemcache.addKey!( k )
+        @trieMemcache.commit! if 0 == (i % 10000)
+      }
+      @trieMemcache.commit!
+    }
+    @arr << tms.to_a
+  end
+
+
   def printResult( )
     @arr.each { |elem|
       printf( "%35s:  %7.2f %7.2f %7.2f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
@@ -147,13 +194,17 @@ end
 
 
 def main( )
-  kvsBench = KvsBench.new( ARGV[0] )
+  trieBench = TrieBench.new( ARGV[0] )
   puts "setup..."
-  kvsBench.setup
+  trieBench.setup
 
   puts "sequential..."
-  kvsBench.sequential
-  kvsBench.printResult
+  trieBench.sequential
+
+  puts "setup trie..."
+  trieBench.setup_trie
+
+  trieBench.printResult
 end
 
 main
