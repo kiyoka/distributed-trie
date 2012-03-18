@@ -5,7 +5,7 @@
 require 'distributedtrie'
 require 'benchmark'
 require 'tokyocabinet'
-require 'dbm'
+require 'gdbm'
 require 'memcache'
 
 class KvsBase < DistributedTrie::KvsIf
@@ -26,7 +26,7 @@ end
 
 class KvsDbm < KvsBase
   def initialize( )
-    @db = DBM.new( "/tmp/distributed-trie.db" )
+    @db = GDBM.new( "/tmp/distributed-trie.db" )
   end
 end
 
@@ -51,8 +51,8 @@ end
 
 
 class TrieBench
-  LOOPTIMES        = 10
-  MAGNIFYING_POWER = 10
+  LOOPTIMES        = 1
+  MAGNIFYING_POWER = 1
 
   def initialize( filename, memcacheFlag )
     @data = open( filename ) {|f|
@@ -62,6 +62,8 @@ class TrieBench
     }
     @arr = []
     @memcacheFlag = memcacheFlag
+    @jarow    = FuzzyStringMatch::JaroWinkler.create( )
+    @jarowKey = "winkler"
   end
 
   attr_reader :memcacheFlag
@@ -218,6 +220,54 @@ class TrieBench
     @arr << tms.to_a
   end
 
+  def sequential_jaro( )
+    # "[Hash]"
+    tms = Benchmark.measure ("array: sequential_jaro") {
+      data = []
+      LOOPTIMES.times { |i|
+        @data.each { |k|
+          if 0.90 < @jarow.getDistance( k, @jarowKey )
+            data << k
+          end
+        }
+      }
+      p data[0..10]
+    }
+    @arr << tms.to_a
+  end
+
+  def fuzzy_search( )
+    # "[Hash]"
+    tms = Benchmark.measure ("hash: fuzzy_search") {
+      LOOPTIMES.times { |i|
+        @trieHash.fuzzySearch( @jarowKey )
+      }
+    }
+    @arr << tms.to_a
+
+    # "[dbm]"
+    tms = Benchmark.measure ("dbm: fuzzy_search") {
+      LOOPTIMES.times { |i|
+        @trieDbm.fuzzySearch( @jarowKey ) 
+      }
+    }
+    @arr << tms.to_a
+
+    # "[Tokyo Cabinet]"
+    tms = Benchmark.measure ("tc: fuzzy_search") {
+      LOOPTIMES.times { |i|
+        @trieTc.fuzzySearch( @jarowKey )
+      }
+    }
+    @arr << tms.to_a
+
+    # "[Memcached]"
+    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES}): fuzzy_search") {
+      @trieMemcache.fuzzySearch( @jarowKey )
+    }
+    @arr << tms.to_a
+  end
+
   def printResult( )
     @arr.each { |elem|
       printf( "%35s:  %7.2f %7.2f %7.2f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
@@ -247,8 +297,14 @@ def main( )
   puts "setup trie..."
   trieBench.setup_trie
 
-  puts "sequential trie..."
-  trieBench.sequential_trie
+#  puts "sequential trie..."
+#  trieBench.sequential_trie
+
+  puts "sequential jaro..."
+  trieBench.sequential_jaro
+
+  puts "fuzzy search..."
+  trieBench.fuzzy_search
 
   trieBench.printResult
 end

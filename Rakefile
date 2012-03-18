@@ -46,10 +46,14 @@ end
 task :bench do
   sh "ruby --version"
   # URL http://www.keithv.com/software/wlist/wlist_match1.zip
-  sh "ruby -I ./lib ./benchmark/bench.rb ./data/wlist_match1.txt   false"
+  sh "ruby -I ./lib ./benchmark/bench.rb  ./data/wlist_match1.txt  false"
+end
+
+task :dumptc do
+  sh "bash -c 'tchmgr list -pv /tmp/distributed-trie.tch > /tmp/distributed-trie.txt'"
 end
 
 task :data do
-  sh "aspell -l en dump master > ./data/wlist_match1.txt"
+  sh "aspell -l en dump master > ./data/aspell.dump.txt"
 end
 
