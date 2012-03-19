@@ -1,0 +1,27 @@
+ruby --version
+ruby 1.9.3p125 (2012-02-16 revision 34643) [x86_64-darwin10.8.0]
+ruby -I ./lib ./benchmark/bench.rb  ./data/wlist_match1.txt  false
+memcacheFlag = [false]
+setup...
+sequential...
+setup trie...
+sequential jaro...
+["finkler", "hinkler", "inker", "inkle", "minkler", "sinkler", "swinker", "tinkler", "twinkle", "twinkler", "twinklers"]
+fuzzy search...
+                        hash: setup:     3.07    0.20    3.28
+                         dbm: setup:    16.79  334.30  368.45
+                          tc: setup:     5.88    0.95    8.36
+                    memcache: setup:     4.02    0.08    4.11
+               hash: sequential_get:     1.14    0.00    1.14
+                dbm: sequential_get:     4.12    0.26    4.37
+                 tc: sequential_get:     4.18    0.44    4.62
+      memcache(1/1): sequential_get:     1.09    0.00    1.09
+                   hash: setup_trie:  1119.73    2.06 1122.19
+                    dbm: setup_trie:  1446.38 1749.42 3237.94
+                     tc: setup_trie:  1423.68   39.04 1484.08
+               memcache: setup_trie:  1666.03    3.63 1672.28
+             array: sequential_jaro:   166.10    2.13  177.11
+                 hash: fuzzy_search:     0.54    0.01    0.54
+                  dbm: fuzzy_search:     1.01    0.13    6.60
+                   tc: fuzzy_search:     3.75    0.88   17.50
+        memcache(1/1): fuzzy_search:     0.53    0.00    0.53
