@@ -49,6 +49,17 @@ class KvsMemcache < KvsBase
   end
 end
 
+class KvsMemcacheEmpty < KvsBase
+  def initialize( )
+  end
+
+  def put!( key, value, timeout = 0 )
+  end
+  def get( key, fallback = false )
+    key
+  end
+end
+
 
 class TrieBench
   LOOPTIMES        = 1
@@ -69,13 +80,6 @@ class TrieBench
   attr_reader :memcacheFlag
 
   def setup( )
-    # Hash (on memory)
-    tms = Benchmark.measure ("hash: setup") {
-      @kvsHash      = DistributedTrie::KvsIf.new
-      @data.each { |k| @kvsHash.put!( k, k * MAGNIFYING_POWER ) }
-    }
-    @arr << tms.to_a
-
     # dbm
     tms = Benchmark.measure ("dbm: setup") {
       @kvsDbm       = KvsDbm.new
@@ -95,23 +99,42 @@ class TrieBench
       if @memcacheFlag 
         @kvsMemcache  = KvsMemcache.new
       else
-        @kvsMemcache  = DistributedTrie::KvsIf.new
+        @kvsMemcache  = KvsMemcacheEmpty.new
       end
       @data.each { |k|   @kvsMemcache.put!( k, k * MAGNIFYING_POWER ) }
     }
     @arr << tms.to_a
   end
 
-  def sequential( )
-    # "[Hash]"
-    tms = Benchmark.measure ("hash: sequential_get") {
-      LOOPTIMES.times { |i|
-        @data.each { |k|
-          @kvsHash.get( k ) }
-      }
+  def load( )
+    # dbm
+    tms = Benchmark.measure ("dbm: load") {
+      @kvsDbm       = KvsDbm.new
+      @trieDbm      = DistributedTrie::Trie.new( @kvsDbm,  "BENCH::" )
     }
     @arr << tms.to_a
 
+    # Tokyo Cabinet
+    tms = Benchmark.measure ("tc: load") {
+      @kvsTc        = KvsTc.new
+      @trieTc       = DistributedTrie::Trie.new( @kvsTc,   "BENCH::" )
+    }
+    @arr << tms.to_a
+
+    # Memcache
+    tms = Benchmark.measure ("memcache: load") {
+      if @memcacheFlag 
+        @kvsMemcache  = KvsMemcache.new
+      else
+        @kvsMemcache  = KvsMemcacheEmpty.new
+      end
+      @trieMemcache  = DistributedTrie::Trie.new( @kvsMemcache,   "BENCH::" )
+    }
+    @arr << tms.to_a
+  end
+
+
+  def sequential( )
     # "[dbm]"
     tms = Benchmark.measure ("dbm: sequential_get") {
       LOOPTIMES.times { |i|
@@ -139,17 +162,6 @@ class TrieBench
   end
 
   def setup_trie( )
-    # Hash (on memory)
-    @trieHash = DistributedTrie::Trie.new( @kvsHash, "BENCH::" )
-    tms = Benchmark.measure ("hash: setup_trie") {
-      @data.each_with_index { |k,i|
-        @trieHash.addKey!( k )
-        @trieHash.commit! if 0 == (i % 10000)
-      }
-      @trieHash.commit!
-    }
-    @arr << tms.to_a
-
     # dbm
     @trieDbm  = DistributedTrie::Trie.new( @kvsDbm,  "BENCH::" )
     tms = Benchmark.measure ("dbm: setup_trie") {
@@ -184,45 +196,9 @@ class TrieBench
     @arr << tms.to_a
   end
 
-  def sequential_trie( )
-    # "[Hash]"
-    tms = Benchmark.measure ("hash: sequential_trie") {
-      LOOPTIMES.times { |i|
-        @data.each { |k|
-          @trieHash.exactMatchSearch( k ) }
-      }
-    }
-    @arr << tms.to_a
-
-    # "[dbm]"
-    tms = Benchmark.measure ("dbm: sequential_trie") {
-      LOOPTIMES.times { |i|
-        @data.each { |k|
-          @trieDbm.exactMatchSearch( k ) }
-      }
-    }
-    @arr << tms.to_a
-
-    # "[Tokyo Cabinet]"
-    tms = Benchmark.measure ("tc: sequential_trie") {
-      LOOPTIMES.times { |i|
-        @data.each { |k|
-          @trieTc.exactMatchSearch( k ) }
-      }
-    }
-    @arr << tms.to_a
-
-    # "[Memcached]"
-    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES}): sequential_trie") {
-      @data.each { |k|
-        @trieMemcache.exactMatchSearch( k ) }
-    }
-    @arr << tms.to_a
-  end
-
   def sequential_jaro( )
-    # "[Hash]"
-    tms = Benchmark.measure ("array: sequential_jaro") {
+    # "[Tokyo Cabinet]"
+    tms = Benchmark.measure ("tc: sequential_jaro") {
       data = []
       LOOPTIMES.times { |i|
         @data.each { |k|
@@ -237,14 +213,6 @@ class TrieBench
   end
 
   def fuzzy_search( )
-    # "[Hash]"
-    tms = Benchmark.measure ("hash: fuzzy_search") {
-      LOOPTIMES.times { |i|
-        @trieHash.fuzzySearch( @jarowKey )
-      }
-    }
-    @arr << tms.to_a
-
     # "[dbm]"
     tms = Benchmark.measure ("dbm: fuzzy_search") {
       LOOPTIMES.times { |i|
@@ -286,25 +254,31 @@ end
 
 
 def main( )
-  trieBench = TrieBench.new( ARGV[0], "true" == ARGV[1] )
-  printf( "memcacheFlag = [%s]\n", trieBench.memcacheFlag )
-  puts "setup..."
-  trieBench.setup
+  case ARGV[0]
+  when "setup"
+    trieBench = TrieBench.new( ARGV[1], "true" == ARGV[2] )
+    printf( "memcacheFlag = [%s]\n", trieBench.memcacheFlag )
+    puts "setup..."
+    trieBench.setup
 
-  puts "sequential..."
-  trieBench.sequential
+    puts "setup trie..."
+    trieBench.setup_trie
+    
+  when "main"
+    trieBench = TrieBench.new( ARGV[1], "true" == ARGV[2] )
+    printf( "memcacheFlag = [%s]\n", trieBench.memcacheFlag )
+    puts "load..."
+    trieBench.load
 
-  puts "setup trie..."
-  trieBench.setup_trie
-
-#  puts "sequential trie..."
-#  trieBench.sequential_trie
-
-  puts "sequential jaro..."
-  trieBench.sequential_jaro
-
-  puts "fuzzy search..."
-  trieBench.fuzzy_search
+    puts "sequential..."
+    trieBench.sequential
+    
+    puts "sequential jaro..."
+    trieBench.sequential_jaro
+    
+    puts "fuzzy search..."
+    trieBench.fuzzy_search
+  end
 
   trieBench.printResult
 end
