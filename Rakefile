@@ -43,10 +43,13 @@ task :test do
   sh "time ruby -I ./lib `which rspec` -b   ./test/bigdata_spec.rb      -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
 end
 
+task :bench_setup do
+  sh "ruby -I ./lib ./benchmark/bench.rb  setup ./data/wlist_match1.txt  false"
+end
+
 task :bench do
-  sh "ruby --version"
   # URL http://www.keithv.com/software/wlist/wlist_match1.zip
-  sh "ruby -I ./lib ./benchmark/bench.rb  ./data/wlist_match1.txt  false"
+  sh "ruby -I ./lib ./benchmark/bench.rb  main  ./data/wlist_match1.txt  false"
 end
 
 task :dumptc do
