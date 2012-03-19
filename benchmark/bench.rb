@@ -41,7 +41,7 @@ end
 
 class KvsMemcache < KvsBase
   def initialize( )
-    @db = MemCache.new( "localhost:11211" )
+    @db = MemCache.new( "localhost:1978" )
   end
 
   def put!( key, value, timeout = 0 )
