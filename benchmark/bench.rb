@@ -63,7 +63,6 @@ end
 
 class TrieBench
   LOOPTIMES        = 1
-  MAGNIFYING_POWER = 1
 
   def initialize( filename, memcacheFlag )
     @data = open( filename ) {|f|
@@ -83,14 +82,14 @@ class TrieBench
     # dbm
     tms = Benchmark.measure ("dbm: setup") {
       @kvsDbm       = KvsDbm.new
-      @data.each { |k|  @kvsDbm.put!( k, k * MAGNIFYING_POWER ) }
+      @data.each { |k|  @kvsDbm.put!( k, k ) }
     }
     @arr << tms.to_a
 
     # Tokyo Cabinet
     tms = Benchmark.measure ("tc: setup") {
       @kvsTc        = KvsTc.new
-      @data.each { |k|   @kvsTc.put!( k, k * MAGNIFYING_POWER ) }
+      @data.each { |k|   @kvsTc.put!( k, k ) }
     }
     @arr << tms.to_a
 
@@ -101,7 +100,7 @@ class TrieBench
       else
         @kvsMemcache  = KvsMemcacheEmpty.new
       end
-      @data.each { |k|   @kvsMemcache.put!( k, k * MAGNIFYING_POWER ) }
+      @data.each { |k|   @kvsMemcache.put!( k, k ) }
     }
     @arr << tms.to_a
   end
@@ -137,24 +136,20 @@ class TrieBench
   def sequential( )
     # "[dbm]"
     tms = Benchmark.measure ("dbm: sequential_get") {
-      LOOPTIMES.times { |i|
-        @data.each { |k|
-          @kvsDbm.get( k ) }
-      }
+      @data.each { |k|
+        @kvsDbm.get( k ) }
     }
     @arr << tms.to_a
 
     # "[Tokyo Cabinet]"
     tms = Benchmark.measure ("tc: sequential_get") {
-      LOOPTIMES.times { |i|
-        @data.each { |k|
-          @kvsTc.get( k ) }
-      }
+      @data.each { |k|
+        @kvsTc.get( k ) }
     }
     @arr << tms.to_a
 
     # "[Memcached]"
-    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES}): sequential_get") {
+    tms = Benchmark.measure ("memcache: sequential_get") {
       @data.each { |k|
         @kvsMemcache.get( k ) }
     }
@@ -200,12 +195,10 @@ class TrieBench
     # "[Tokyo Cabinet]"
     tms = Benchmark.measure ("tc: sequential_jaro") {
       data = []
-      LOOPTIMES.times { |i|
-        @data.each { |k|
-          if 0.90 < @jarow.getDistance( k, @jarowKey )
-            data << k
-          end
-        }
+      @data.each { |k|
+        if 0.90 < @jarow.getDistance( k, @jarowKey )
+          data << k
+        end
       }
       p data[0..10]
     }
@@ -215,22 +208,18 @@ class TrieBench
   def fuzzy_search( )
     # "[dbm]"
     tms = Benchmark.measure ("dbm: fuzzy_search") {
-      LOOPTIMES.times { |i|
-        @trieDbm.fuzzySearch( @jarowKey ) 
-      }
+      @trieDbm.fuzzySearch( @jarowKey ) 
     }
     @arr << tms.to_a
 
     # "[Tokyo Cabinet]"
     tms = Benchmark.measure ("tc: fuzzy_search") {
-      LOOPTIMES.times { |i|
-        @trieTc.fuzzySearch( @jarowKey )
-      }
+      @trieTc.fuzzySearch( @jarowKey )
     }
     @arr << tms.to_a
 
     # "[Memcached]"
-    tms = Benchmark.measure ("memcache(1/#{LOOPTIMES}): fuzzy_search") {
+    tms = Benchmark.measure ("memcache: fuzzy_search") {
       @trieMemcache.fuzzySearch( @jarowKey )
     }
     @arr << tms.to_a
