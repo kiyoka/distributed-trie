@@ -43,8 +43,8 @@ task :test do
   sh "time ruby -I ./lib `which rspec` -b   ./test/bigdata_spec.rb      -r ./test/rspec_formatter_for_emacs.rb -f CustomFormatter"
 end
 
-DATA="aspell.dump.txt"
-#DATA="wlist_match1.txt"
+#DATA="aspell.dump.txt"
+DATA="wlist_match1.txt"
 
 task :bench_setup do
   sh "ruby -I ./lib ./benchmark/bench.rb  setup ./data/#{DATA}  true"
