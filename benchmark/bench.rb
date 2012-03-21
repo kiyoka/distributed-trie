@@ -66,30 +66,37 @@ begin
   require 'aws_sdb'
   class KvsSdb < KvsBase
     def initialize( )
+      @db = AwsSdb::Service.new
+      @domain = 'triebench'
+      @db.create_domain( @domain )
     end
-    def put
+    def put!( key, value, timeout = 0 )
+      @db.put_attributes( @domain, key, { 'index' => value } )
     end
-end
-rescue LoadError
-  class KvsSdb < KvsBase
+    def get( key, fallback = false )
+      val = @db.get_attributes( @domain, key )
+      if val
+        val['index'].force_encoding("UTF-8")
+      else
+        fallback
+      end
+    end
   end
+rescue LoadError
 end
 
 
 class TrieBench
-  def initialize( filename, memcacheFlag )
+  def initialize( filename )
     @data = open( filename ) {|f|
       f.map {|line|
         line.chomp!
       }
     }
     @arr = []
-    @memcacheFlag = memcacheFlag
     @jarow    = FuzzyStringMatch::JaroWinkler.create( )
     @jarowKey = "winkler"
   end
-
-  attr_reader :memcacheFlag
 
   def setup( )
     # dbm
@@ -112,6 +119,17 @@ class TrieBench
       @data.each { |k|   @kvsMemcache.put!( k, k ) }
     }
     @arr << tms.to_a
+
+    # SimpleDB
+    begin
+      tms = Benchmark.measure ("simpleDB: setup") {
+        @kvsSdb         = KvsSdb.new
+        @data.each { |k|   @kvsSdb.put!( k, k ) }
+      }
+      @arr << tms.to_a
+    rescue NameError
+      puts "Info: aws_sdb is not installed."
+    end
   end
 
   def load( )
@@ -132,9 +150,21 @@ class TrieBench
     # Memcache
     tms = Benchmark.measure ("memcache: load") {
       @kvsMemcache  = KvsMemcache.new
-      @trieMemcache  = DistributedTrie::Trie.new( @kvsMemcache,   "BENCH::" )
+      @trieMemcache = DistributedTrie::Trie.new( @kvsMemcache,   "BENCH::" )
     }
     @arr << tms.to_a
+
+    # SimpleDB
+    begin
+      tms = Benchmark.measure ("simpleDB: load") {
+        @kvsSdb       = KvsSdb.new
+        @trieSdb      = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
+      }
+      @arr << tms.to_a
+    rescue NameError
+      puts "Info: aws_sdb is not installed."
+    end
+
   end
 
 
@@ -159,6 +189,17 @@ class TrieBench
         @kvsMemcache.get( k ) }
     }
     @arr << tms.to_a
+
+    # [SimpleDB]
+    begin
+      tms = Benchmark.measure ("simpleDB: sequential_get") {
+        @data.each { |k|
+          @kvsSdb.get( k ) }
+      }
+      @arr << tms.to_a
+    rescue NameError
+      puts "Info: aws_sdb is not installed."
+    end
   end
 
   def setup_trie( )
@@ -194,6 +235,22 @@ class TrieBench
       @trieMemcache.commit!
     }
     @arr << tms.to_a
+
+    # SimpleDB
+    begin
+      @trieSdb  = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
+      tms = Benchmark.measure ("simpleDB: setup_trie") {
+        @data.each_with_index { |k,i|
+          @trieSdb.addKey!( k )
+          @trieSdb.commit! if 0 == (i % 10000)
+        }
+        @trieSdb.commit!
+      }
+      @arr << tms.to_a
+    rescue NameError
+      puts "Info: aws_sdb is not installed."
+    end
+
   end
 
   def sequential_jaro( )
@@ -231,6 +288,18 @@ class TrieBench
       p data.size, data
     }
     @arr << tms.to_a
+
+    # "[SimpleDB]"
+    begin
+      tms = Benchmark.measure ("simpleDB: fuzzy_search") {
+        data = @trieSdb.fuzzySearch( @jarowKey )
+        p data.size, data
+      }
+      @arr << tms.to_a
+    rescue NameError
+      puts "Info: aws_sdb is not installed."
+    end
+
   end
 
   def printResult( )
@@ -253,8 +322,7 @@ end
 def main( )
   case ARGV[0]
   when "setup"
-    trieBench = TrieBench.new( ARGV[1], "true" == ARGV[2] )
-    printf( "memcacheFlag = [%s]\n", trieBench.memcacheFlag )
+    trieBench = TrieBench.new( ARGV[1] )
     puts "setup..."
     trieBench.setup
 
@@ -262,8 +330,7 @@ def main( )
     trieBench.setup_trie
 
   when "main"
-    trieBench = TrieBench.new( ARGV[1], "true" == ARGV[2] )
-    printf( "memcacheFlag = [%s]\n", trieBench.memcacheFlag )
+    trieBench = TrieBench.new( ARGV[1] )
     puts "load..."
     trieBench.load
 
