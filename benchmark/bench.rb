@@ -2,6 +2,15 @@
 #
 # http://www.ruby-lang.org/ja/man/html/benchmark.html
 #
+#
+# requires:
+#    gdbm (ruby buildin)
+#    Tokyo Cabinet
+#    Tokyo Tyrant ( with memcache protocol )
+#
+# options:
+#    aws-sdb gem (Amazon SimpleDB)
+#
 require 'distributedtrie'
 require 'benchmark'
 require 'tokyocabinet'
@@ -41,7 +50,10 @@ end
 
 class KvsMemcache < KvsBase
   def initialize( )
-    @db = MemCache.new( "localhost:1978" )
+    @db = MemCache.new(
+                   "localhost:1978",
+                   :connect_timeout => 1000.0,
+                   :timeout => 1000.0 )
   end
 
   def put!( key, value, timeout = 0 )
@@ -49,14 +61,17 @@ class KvsMemcache < KvsBase
   end
 end
 
-class KvsMemcacheEmpty < KvsBase
-  def initialize( )
-  end
 
-  def put!( key, value, timeout = 0 )
-  end
-  def get( key, fallback = false )
-    key
+begin
+  require 'aws_sdb'
+  class KvsSdb < KvsBase
+    def initialize( )
+    end
+    def put
+    end
+end
+rescue LoadError
+  class KvsSdb < KvsBase
   end
 end
 
@@ -95,11 +110,7 @@ class TrieBench
 
     # Memcache
     tms = Benchmark.measure ("memcache: setup") {
-      if @memcacheFlag 
-        @kvsMemcache  = KvsMemcache.new
-      else
-        @kvsMemcache  = KvsMemcacheEmpty.new
-      end
+      @kvsMemcache    = KvsMemcache.new
       @data.each { |k|   @kvsMemcache.put!( k, k ) }
     }
     @arr << tms.to_a
@@ -122,11 +133,7 @@ class TrieBench
 
     # Memcache
     tms = Benchmark.measure ("memcache: load") {
-      if @memcacheFlag 
-        @kvsMemcache  = KvsMemcache.new
-      else
-        @kvsMemcache  = KvsMemcacheEmpty.new
-      end
+      @kvsMemcache  = KvsMemcache.new
       @trieMemcache  = DistributedTrie::Trie.new( @kvsMemcache,   "BENCH::" )
     }
     @arr << tms.to_a
@@ -252,7 +259,7 @@ def main( )
 
     puts "setup trie..."
     trieBench.setup_trie
-    
+
   when "main"
     trieBench = TrieBench.new( ARGV[1], "true" == ARGV[2] )
     printf( "memcacheFlag = [%s]\n", trieBench.memcacheFlag )
@@ -261,10 +268,10 @@ def main( )
 
     puts "sequential..."
     trieBench.sequential
-    
+
     puts "sequential jaro..."
     trieBench.sequential_jaro
-    
+
     puts "fuzzy search..."
     trieBench.fuzzy_search
   end
