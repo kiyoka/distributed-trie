@@ -77,8 +77,6 @@ end
 
 
 class TrieBench
-  LOOPTIMES        = 1
-
   def initialize( filename, memcacheFlag )
     @data = open( filename ) {|f|
       f.map {|line|
@@ -203,11 +201,11 @@ class TrieBench
     tms = Benchmark.measure ("tc: sequential_jaro") {
       data = []
       @data.each { |k|
-        if 0.90 < @jarow.getDistance( k, @jarowKey )
+        if 0.90 <= @jarow.getDistance( k, @jarowKey )
           data << k
         end
       }
-      p data[0..10]
+      p data.size, data
     }
     @arr << tms.to_a
   end
@@ -215,19 +213,22 @@ class TrieBench
   def fuzzy_search( )
     # "[dbm]"
     tms = Benchmark.measure ("dbm: fuzzy_search") {
-      @trieDbm.fuzzySearch( @jarowKey ) 
+      data = @trieDbm.fuzzySearch( @jarowKey ) 
+      p data.size, data
     }
     @arr << tms.to_a
 
     # "[Tokyo Cabinet]"
     tms = Benchmark.measure ("tc: fuzzy_search") {
-      @trieTc.fuzzySearch( @jarowKey )
+      data = @trieTc.fuzzySearch( @jarowKey )
+      p data.size, data
     }
     @arr << tms.to_a
 
     # "[Memcached]"
     tms = Benchmark.measure ("memcache: fuzzy_search") {
-      @trieMemcache.fuzzySearch( @jarowKey )
+      data = @trieMemcache.fuzzySearch( @jarowKey )
+      p data.size, data
     }
     @arr << tms.to_a
   end
@@ -266,8 +267,8 @@ def main( )
     puts "load..."
     trieBench.load
 
-    puts "sequential..."
-    trieBench.sequential
+#    puts "sequential..."
+#    trieBench.sequential
 
     puts "sequential jaro..."
     trieBench.sequential_jaro

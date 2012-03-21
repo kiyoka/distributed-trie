@@ -142,6 +142,7 @@ module DistributedTrie
           }
         end
         result = jarow.getDistance( x, _word )
+        #require 'pp'
         #pp [ "fuzzyString", result, x, _word, termFlag ]
         threshold <= result
       }
