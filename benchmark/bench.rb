@@ -81,9 +81,14 @@ begin
       puts "simpleDB: " + key
     end
     def get( key, fallback = false )
-      vals = @domein.items[ key ].attributes[ 'index' ].values
-      if vals[0]
-        vals[0].force_encoding("UTF-8")
+      item = @domain.items[ key ]
+      if item
+        vals = item.attributes[ 'index' ].values
+        if vals[0]
+          vals[0].force_encoding("UTF-8")
+        else
+          fallback
+        end
       else
         fallback
       end
@@ -128,15 +133,11 @@ class TrieBench
     @arr << tms.to_a
 
     # SimpleDB
-    begin
-      tms = Benchmark.measure ("simpleDB: setup") {
-        @kvsSdb         = KvsSdb.new
-        @data.each { |k|   @kvsSdb.put!( k, k ) }
-      }
-      @arr << tms.to_a
-    rescue NameError
-      puts "Info: aws-sdk is not installed(1)"
-    end
+    tms = Benchmark.measure ("simpleDB: setup") {
+      @kvsSdb         = KvsSdb.new
+      @data[0..100].each { |k|   @kvsSdb.put!( k, k ) }
+    }
+    @arr << tms.to_a
   end
 
   def load( )
@@ -162,15 +163,11 @@ class TrieBench
     @arr << tms.to_a
 
     # SimpleDB
-    begin
-      tms = Benchmark.measure ("simpleDB: load") {
-        @kvsSdb       = KvsSdb.new
-        @trieSdb      = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
-      }
-      @arr << tms.to_a
-    rescue NameError
-      puts "Info: aws-sdk is not installed(2)"
-    end
+    tms = Benchmark.measure ("simpleDB: load") {
+      @kvsSdb       = KvsSdb.new
+      @trieSdb      = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
+    }
+    @arr << tms.to_a
 
   end
 
@@ -198,15 +195,11 @@ class TrieBench
     @arr << tms.to_a
 
     # [SimpleDB]
-    begin
-      tms = Benchmark.measure ("simpleDB: sequential_get") {
-        @data.each { |k|
-          @kvsSdb.get( k ) }
-      }
-      @arr << tms.to_a
-    rescue NameError
-      puts "Info: aws-sdk is not installed(3)"
-    end
+    tms = Benchmark.measure ("simpleDB: sequential_get") {
+      @data.each { |k|
+        @kvsSdb.get( k ) }
+    }
+    @arr << tms.to_a
   end
 
   def setup_trie( )
@@ -244,20 +237,15 @@ class TrieBench
     @arr << tms.to_a
 
     # SimpleDB
-    begin
-      @trieSdb  = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
-      tms = Benchmark.measure ("simpleDB: setup_trie") {
-        @data.each_with_index { |k,i|
-          @trieSdb.addKey!( k )
-          @trieSdb.commit! if 0 == (i % 10000)
-        }
-        @trieSdb.commit!
+    @trieSdb  = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
+    tms = Benchmark.measure ("simpleDB: setup_trie") {
+      @data.each_with_index { |k,i|
+        @trieSdb.addKey!( k )
+        @trieSdb.commit! if 0 == (i % 10000)
       }
-      @arr << tms.to_a
-    rescue NameError
-      puts "Info: aws-sdk is not installed(4)"
-    end
-
+      @trieSdb.commit!
+    }
+    @arr << tms.to_a
   end
 
   def sequential_jaro( )
@@ -297,15 +285,12 @@ class TrieBench
     @arr << tms.to_a
 
     # "[SimpleDB]"
-    begin
-      tms = Benchmark.measure ("simpleDB: fuzzy_search") {
-        data = @trieSdb.fuzzySearch( @jarowKey )
-        p data.size, data
-      }
-      @arr << tms.to_a
-    rescue NameError
-      puts "Info: aws-sdk is not installed(5)"
-    end
+    tms = Benchmark.measure ("simpleDB: fuzzy_search") {
+      data = @trieSdb.fuzzySearch( @jarowKey )
+      p data.size, data
+    }
+    @arr << tms.to_a
+    #puts "Info: aws-sdk is not installed(5)"
 
   end
 
