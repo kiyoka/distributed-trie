@@ -63,20 +63,27 @@ end
 
 
 begin
-  require 'aws_sdb'
+  require 'aws-sdk'
   class KvsSdb < KvsBase
     def initialize( )
-      @db = AwsSdb::Service.new
-      @domain = 'triebench'
-      @db.create_domain( @domain )
+      printf( "Amazon SimpleDB access_key_id:     %s\n", ENV['AMAZON_ACCESS_KEY_ID'])
+      printf( "Amazon SimpleDB secret_access_key: %s\n", ENV['AMAZON_SECRET_ACCESS_KEY'])
+      db = AWS::SimpleDB.new(
+                         :access_key_id      => ENV['AMAZON_ACCESS_KEY_ID'],
+                         :secret_access_key  => ENV['AMAZON_SECRET_ACCESS_KEY'],
+                         :simple_db_endpoint => 'sdb.ap-northeast-1.amazonaws.com',
+                         :use_ssl            => false )
+      @domain = db.domains.create( 'triebench' )
     end
     def put!( key, value, timeout = 0 )
-      @db.put_attributes( @domain, key, { 'index' => value } )
+      item = @domain.items[ key ]
+      item.attributes[ 'key' ] = value.force_encoding("ASCII-8BIT")
+      puts "simpleDB: " + key
     end
     def get( key, fallback = false )
-      val = @db.get_attributes( @domain, key )
-      if val
-        val['index'].force_encoding("UTF-8")
+      vals = @domein.items[ key ].attributes[ 'index' ].values
+      if vals[0]
+        vals[0].force_encoding("UTF-8")
       else
         fallback
       end
@@ -128,7 +135,7 @@ class TrieBench
       }
       @arr << tms.to_a
     rescue NameError
-      puts "Info: aws_sdb is not installed."
+      puts "Info: aws-sdk is not installed(1)"
     end
   end
 
@@ -162,7 +169,7 @@ class TrieBench
       }
       @arr << tms.to_a
     rescue NameError
-      puts "Info: aws_sdb is not installed."
+      puts "Info: aws-sdk is not installed(2)"
     end
 
   end
@@ -198,7 +205,7 @@ class TrieBench
       }
       @arr << tms.to_a
     rescue NameError
-      puts "Info: aws_sdb is not installed."
+      puts "Info: aws-sdk is not installed(3)"
     end
   end
 
@@ -248,7 +255,7 @@ class TrieBench
       }
       @arr << tms.to_a
     rescue NameError
-      puts "Info: aws_sdb is not installed."
+      puts "Info: aws-sdk is not installed(4)"
     end
 
   end
@@ -297,7 +304,7 @@ class TrieBench
       }
       @arr << tms.to_a
     rescue NameError
-      puts "Info: aws_sdb is not installed."
+      puts "Info: aws-sdk is not installed(5)"
     end
 
   end
