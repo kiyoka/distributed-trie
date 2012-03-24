@@ -1,0 +1,21 @@
+~/work/github/distributed-trie/benchmark/macbookPro $ rake bench
+(in /Volumes/CaseSensitive/kiyoka/work/github/distributed-trie)
+ruby -I ./lib ./benchmark/bench.rb  main  ./data/aspell.dump.txt
+load...
+sequential jaro...
+13
+["wrinkle", "wrinklier", "twinkle", "wine", "wink", "winker", "winkle", "winkle's", "winkles", "winkled", "winker's", "winkers", "winked"]
+fuzzy search...
+12
+["wrinkle", "wine", "winkers", "winker's", "winker", "winked", "winkles", "winkled", "winkle's", "winkle", "wink", "twinkle"]
+12
+["wrinkle", "wine", "winkers", "winker's", "winker", "winked", "winkles", "winkled", "winkle's", "winkle", "wink", "twinkle"]
+12
+["wrinkle", "wine", "winkers", "winker's", "winker", "winked", "winkles", "winkled", "winkle's", "winkle", "wink", "twinkle"]
+                          dbm: load:     0.00    0.00    0.00
+                           tc: load:     0.00    0.00    0.00
+                     memcache: load:     0.00    0.00    0.00
+                tc: sequential_jaro:     6.86    0.03    6.92
+                  dbm: fuzzy_search:     0.18    0.00    0.18
+                   tc: fuzzy_search:     0.19    0.00    0.19
+             memcache: fuzzy_search:     0.24    0.02    0.26
