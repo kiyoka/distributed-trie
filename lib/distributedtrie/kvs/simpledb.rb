@@ -39,7 +39,7 @@ module DistributedTrie
   begin
     require 'aws-sdk'
     class KvsSdb < KvsBase
-      def initialize( )
+      def initialize( domainName )
         printf( "Amazon SimpleDB access_key_id:     %s\n", ENV['AMAZON_ACCESS_KEY_ID'])
         printf( "Amazon SimpleDB secret_access_key: %s\n", ENV['AMAZON_SECRET_ACCESS_KEY'])
         db = AWS::SimpleDB.new(
@@ -47,7 +47,7 @@ module DistributedTrie
                                :secret_access_key  => ENV['AMAZON_SECRET_ACCESS_KEY'],
                                :simple_db_endpoint => 'sdb.ap-northeast-1.amazonaws.com',
                                :use_ssl            => false )
-        @domain = db.domains.create( 'triebench' )
+        @domain = db.domains.create( domainName )
       end
       def put!( key, value, timeout = 0 )
         item = @domain.items[ key ]
@@ -57,7 +57,7 @@ module DistributedTrie
       def get( key, fallback = false )
         item = @domain.items[ key ]
         if item
-          vals = item.attributes[ 'index' ].values
+          vals = item.attributes[ 'key' ].values
           if vals[0]
             vals[0].force_encoding("UTF-8")
           else

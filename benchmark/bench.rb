@@ -20,8 +20,9 @@ require 'benchmark'
 
 class TrieBench
 
-  DBM_PATH = '/tmp/distributed-trie.db'
-  TCH_PATH = '/tmp/distributed-trie.tch'
+  DBM_PATH    = '/tmp/distributed-trie.db'
+  TCH_PATH    = '/tmp/distributed-trie.tch'
+  DOMAIN_NAME = 'triebench2'
 
   def initialize( filename )
     @data = open( filename ) {|f|
@@ -57,7 +58,7 @@ class TrieBench
     @arr << tms.to_a
 
     # SimpleDB
-    @kvsSdb       = DistributedTrie::KvsSdb.new
+    @kvsSdb       = DistributedTrie::KvsSdb.new( DOMAIN_NAME )
     if @kvsSdb.enabled?
       tms = Benchmark.measure ("simpleDB: setup") {
         @data.each { |k|   @kvsSdb.put!( k, k ) }
@@ -95,7 +96,7 @@ class TrieBench
     @arr << tms.to_a
 
     # SimpleDB
-    @kvsSdb       = DistributedTrie::KvsSdb.new
+    @kvsSdb       = DistributedTrie::KvsSdb.new( DOMAIN_NAME )
     if @kvsSdb.enabled?
       tms = Benchmark.measure ("simpleDB: load") {
         @trieSdb      = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
