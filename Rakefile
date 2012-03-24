@@ -47,12 +47,16 @@ DATA="aspell.dump.txt"
 #DATA="wlist_match1.txt"
 
 task :bench_setup do
-  sh "ruby -I ./lib ./benchmark/bench.rb  setup ./data/#{DATA}"
+  sh "ruby -I ./lib ./benchmark/bench.rb  setup  ./data/#{DATA}"
 end
 
 task :bench do
   # URL http://www.keithv.com/software/wlist/wlist_match1.zip
-  sh "ruby -I ./lib ./benchmark/bench.rb  main  ./data/#{DATA}"
+  sh "ruby -I ./lib ./benchmark/bench.rb  main   ./data/#{DATA}"
+end
+
+task :bench_random do
+  sh "ruby -I ./lib ./benchmark/bench.rb random  ./data/#{DATA}"
 end
 
 task :dumptc do

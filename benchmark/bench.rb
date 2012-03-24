@@ -194,6 +194,43 @@ class TrieBench
     end
   end
 
+  def random_fuzzy_search( )
+    len = @data.length
+    step = len / 100
+    random_data = []
+    100.times{ |i|
+      random_data << @data[i * 100]
+    }
+    p random_data
+    
+    # "[dbm]"
+    tms = Benchmark.measure ("dbm: random_fuzzy_search") {
+      random_data.each { |x|  @trieDbm.fuzzySearch( x ) }
+    }
+    @arr << tms.to_a
+
+    # "[Tokyo Cabinet]"
+    tms = Benchmark.measure ("tc: random_fuzzy_search") {
+      random_data.each { |x| @trieTc.fuzzySearch( x ) }
+    }
+    @arr << tms.to_a
+
+    # "[Memcached]"
+    tms = Benchmark.measure ("memcache: random_fuzzy_search") {
+      random_data.each { |x| @trieMemcache.fuzzySearch( x ) }
+    }
+    @arr << tms.to_a
+
+    # "[SimpleDB]"
+    if @kvsSdb.enabled?
+      tms = Benchmark.measure ("simpleDB: random_fuzzy_search") {
+        random_data.each { |x| @trieSdb.fuzzySearch( x ) }
+      }
+      @arr << tms.to_a
+      #puts "Info: aws-sdk is not installed(5)"
+    end
+  end
+
   def printResult( )
     @arr.each { |elem|
       printf( "%35s:  %7.2f %7.2f %7.2f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
@@ -231,6 +268,14 @@ def main( )
 
     puts "fuzzy search..."
     trieBench.fuzzy_search
+
+  when "random"
+    trieBench = TrieBench.new( ARGV[1] )
+    puts "load..."
+    trieBench.load
+
+    puts "random fuzzy search..."
+    trieBench.random_fuzzy_search
   end
 
   trieBench.printResult
