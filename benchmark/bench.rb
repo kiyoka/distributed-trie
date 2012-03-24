@@ -67,6 +67,11 @@ class TrieBench
   end
 
   def load( )
+    load1()
+    load2()
+  end
+
+  def load1( )
     # dbm
     tms = Benchmark.measure ("dbm: load") {
       @kvsDbm       = DistributedTrie::KvsDbm.new( DBM_PATH )
@@ -80,7 +85,8 @@ class TrieBench
       @trieTc       = DistributedTrie::Trie.new( @kvsTc,   "BENCH::" )
     }
     @arr << tms.to_a
-
+  end
+  def load2()   # can go parallel
     # Memcache
     tms = Benchmark.measure ("memcache: load") {
       @kvsMemcache  = DistributedTrie::KvsMemcache.new
@@ -96,7 +102,6 @@ class TrieBench
       }
       @arr << tms.to_a
     end
-
   end
 
   def setup_trie( )
@@ -194,7 +199,7 @@ class TrieBench
     end
   end
 
-  def random_fuzzy_search( )
+  def random_fuzzy_search( parallel = false )
     len = @data.length
     step = len / 100
     random_data = []
@@ -203,31 +208,33 @@ class TrieBench
     }
     p random_data
     
-    # "[dbm]"
-    tms = Benchmark.measure ("dbm: random_fuzzy_search") {
-      random_data.each { |x|  @trieDbm.fuzzySearch( x ) }
-    }
-    @arr << tms.to_a
-
-    # "[Tokyo Cabinet]"
-    tms = Benchmark.measure ("tc: random_fuzzy_search") {
-      random_data.each { |x| @trieTc.fuzzySearch( x ) }
-    }
-    @arr << tms.to_a
-
-    # "[Memcached]"
-    tms = Benchmark.measure ("memcache: random_fuzzy_search") {
-      random_data.each { |x| @trieMemcache.fuzzySearch( x ) }
-    }
-    @arr << tms.to_a
-
-    # "[SimpleDB]"
-    if @kvsSdb.enabled?
-      tms = Benchmark.measure ("simpleDB: random_fuzzy_search") {
-        random_data.each { |x| @trieSdb.fuzzySearch( x ) }
+    if not parallel
+      # "[dbm]"
+      tms = Benchmark.measure ("dbm: random_fuzzy_search") {
+        random_data.each { |x|  @trieDbm.fuzzySearch( x ) }
       }
       @arr << tms.to_a
-      #puts "Info: aws-sdk is not installed(5)"
+      
+      # "[Tokyo Cabinet]"
+      tms = Benchmark.measure ("tc: random_fuzzy_search") {
+        random_data.each { |x| @trieTc.fuzzySearch( x ) }
+      }
+      @arr << tms.to_a
+    else
+      # "[Memcached]"
+      tms = Benchmark.measure ("memcache: random_fuzzy_search") {
+        random_data.each { |x| @trieMemcache.fuzzySearch( x ) }
+      }
+      @arr << tms.to_a
+      
+      # "[SimpleDB]"
+      if @kvsSdb.enabled?
+        tms = Benchmark.measure ("simpleDB: random_fuzzy_search") {
+          random_data.each { |x| @trieSdb.fuzzySearch( x ) }
+        }
+        @arr << tms.to_a
+        #puts "Info: aws-sdk is not installed(5)"
+      end
     end
   end
 
@@ -272,10 +279,10 @@ def main( )
   when "random"
     trieBench = TrieBench.new( ARGV[1] )
     puts "load..."
-    trieBench.load
+    trieBench.load2 # paralell
 
     puts "random fuzzy search..."
-    trieBench.random_fuzzy_search
+    trieBench.random_fuzzy_search( true ) # paralell
   end
 
   trieBench.printResult
