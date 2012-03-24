@@ -12,93 +12,17 @@
 #    aws-sdb gem (Amazon SimpleDB)
 #
 require 'distributedtrie'
+require 'distributedtrie/kvs/dbm'
+require 'distributedtrie/kvs/tokyocabinet'
+require 'distributedtrie/kvs/memcache'
+require 'distributedtrie/kvs/simpledb'
 require 'benchmark'
-require 'tokyocabinet'
-require 'gdbm'
-require 'memcache'
-
-class KvsBase < DistributedTrie::KvsIf
-  def put!( key, value, timeout = 0 )
-    @db[ key.force_encoding("ASCII-8BIT") ] = value.force_encoding("ASCII-8BIT")
-  end
-
-  def get( key, fallback = false )
-    val = @db[ key ]
-    if val
-      val.force_encoding("UTF-8")
-    else
-      fallback
-    end
-  end
-end
-
-
-class KvsDbm < KvsBase
-  def initialize( )
-    @db = GDBM.new( "/tmp/distributed-trie.db" )
-  end
-end
-
-
-class KvsTc < KvsBase
-  def initialize( )
-    @db = TokyoCabinet::HDB.new( )
-    @db.open( "/tmp/distributed-trie.tch", TokyoCabinet::HDB::OWRITER | TokyoCabinet::HDB::OCREAT )
-  end
-end
-
-
-class KvsMemcache < KvsBase
-  def initialize( )
-    @db = MemCache.new(
-                   "localhost:1978",
-                   :connect_timeout => 1000.0,
-                   :timeout => 1000.0 )
-  end
-
-  def put!( key, value, timeout = 0 )
-    @db.set( key.force_encoding("ASCII-8BIT"), value.force_encoding("ASCII-8BIT"), timeout )
-  end
-end
-
-
-begin
-  require 'aws-sdk'
-  class KvsSdb < KvsBase
-    def initialize( )
-      printf( "Amazon SimpleDB access_key_id:     %s\n", ENV['AMAZON_ACCESS_KEY_ID'])
-      printf( "Amazon SimpleDB secret_access_key: %s\n", ENV['AMAZON_SECRET_ACCESS_KEY'])
-      db = AWS::SimpleDB.new(
-                         :access_key_id      => ENV['AMAZON_ACCESS_KEY_ID'],
-                         :secret_access_key  => ENV['AMAZON_SECRET_ACCESS_KEY'],
-                         :simple_db_endpoint => 'sdb.ap-northeast-1.amazonaws.com',
-                         :use_ssl            => false )
-      @domain = db.domains.create( 'triebench' )
-    end
-    def put!( key, value, timeout = 0 )
-      item = @domain.items[ key ]
-      item.attributes[ 'key' ] = value.force_encoding("ASCII-8BIT")
-      puts "simpleDB: " + key
-    end
-    def get( key, fallback = false )
-      item = @domain.items[ key ]
-      if item
-        vals = item.attributes[ 'index' ].values
-        if vals[0]
-          vals[0].force_encoding("UTF-8")
-        else
-          fallback
-        end
-      else
-        fallback
-      end
-    end
-  end
-rescue LoadError
-end
-
 
 class TrieBench
+
+  DBM_PATH = '/tmp/distributed-trie.db'
+  TCH_PATH = '/tmp/distributed-trie.tch'
+
   def initialize( filename )
     @data = open( filename ) {|f|
       f.map {|line|
@@ -113,93 +37,66 @@ class TrieBench
   def setup( )
     # dbm
     tms = Benchmark.measure ("dbm: setup") {
-      @kvsDbm       = KvsDbm.new
+      @kvsDbm       = DistributedTrie::KvsDbm.new( DBM_PATH )
       @data.each { |k|  @kvsDbm.put!( k, k ) }
     }
     @arr << tms.to_a
 
     # Tokyo Cabinet
     tms = Benchmark.measure ("tc: setup") {
-      @kvsTc        = KvsTc.new
+      @kvsTc        = DistributedTrie::KvsTc.new( TCH_PATH )
       @data.each { |k|   @kvsTc.put!( k, k ) }
     }
     @arr << tms.to_a
 
     # Memcache
     tms = Benchmark.measure ("memcache: setup") {
-      @kvsMemcache    = KvsMemcache.new
+      @kvsMemcache  = DistributedTrie::KvsMemcache.new
       @data.each { |k|   @kvsMemcache.put!( k, k ) }
     }
     @arr << tms.to_a
 
     # SimpleDB
-    tms = Benchmark.measure ("simpleDB: setup") {
-      @kvsSdb         = KvsSdb.new
-      @data[0..100].each { |k|   @kvsSdb.put!( k, k ) }
-    }
-    @arr << tms.to_a
+    @kvsSdb       = DistributedTrie::KvsSdb.new
+    if @kvsSdb.enabled?
+      tms = Benchmark.measure ("simpleDB: setup") {
+        @data.each { |k|   @kvsSdb.put!( k, k ) }
+      }
+      @arr << tms.to_a
+    end
   end
 
   def load( )
     # dbm
     tms = Benchmark.measure ("dbm: load") {
-      @kvsDbm       = KvsDbm.new
+      @kvsDbm       = DistributedTrie::KvsDbm.new( DBM_PATH )
       @trieDbm      = DistributedTrie::Trie.new( @kvsDbm,  "BENCH::" )
     }
     @arr << tms.to_a
 
     # Tokyo Cabinet
     tms = Benchmark.measure ("tc: load") {
-      @kvsTc        = KvsTc.new
+      @kvsTc        = DistributedTrie::KvsTc.new( TCH_PATH )
       @trieTc       = DistributedTrie::Trie.new( @kvsTc,   "BENCH::" )
     }
     @arr << tms.to_a
 
     # Memcache
     tms = Benchmark.measure ("memcache: load") {
-      @kvsMemcache  = KvsMemcache.new
+      @kvsMemcache  = DistributedTrie::KvsMemcache.new
       @trieMemcache = DistributedTrie::Trie.new( @kvsMemcache,   "BENCH::" )
     }
     @arr << tms.to_a
 
     # SimpleDB
-    tms = Benchmark.measure ("simpleDB: load") {
-      @kvsSdb       = KvsSdb.new
-      @trieSdb      = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
-    }
-    @arr << tms.to_a
+    @kvsSdb       = DistributedTrie::KvsSdb.new
+    if @kvsSdb.enabled?
+      tms = Benchmark.measure ("simpleDB: load") {
+        @trieSdb      = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
+      }
+      @arr << tms.to_a
+    end
 
-  end
-
-
-  def sequential( )
-    # "[dbm]"
-    tms = Benchmark.measure ("dbm: sequential_get") {
-      @data.each { |k|
-        @kvsDbm.get( k ) }
-    }
-    @arr << tms.to_a
-
-    # "[Tokyo Cabinet]"
-    tms = Benchmark.measure ("tc: sequential_get") {
-      @data.each { |k|
-        @kvsTc.get( k ) }
-    }
-    @arr << tms.to_a
-
-    # "[Memcached]"
-    tms = Benchmark.measure ("memcache: sequential_get") {
-      @data.each { |k|
-        @kvsMemcache.get( k ) }
-    }
-    @arr << tms.to_a
-
-    # [SimpleDB]
-    tms = Benchmark.measure ("simpleDB: sequential_get") {
-      @data.each { |k|
-        @kvsSdb.get( k ) }
-    }
-    @arr << tms.to_a
   end
 
   def setup_trie( )
@@ -237,15 +134,17 @@ class TrieBench
     @arr << tms.to_a
 
     # SimpleDB
-    @trieSdb  = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
-    tms = Benchmark.measure ("simpleDB: setup_trie") {
-      @data.each_with_index { |k,i|
-        @trieSdb.addKey!( k )
-        @trieSdb.commit! if 0 == (i % 10000)
+    if @kvsSdb.enabled?
+      @trieSdb  = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
+      tms = Benchmark.measure ("simpleDB: setup_trie") {
+        @data.each_with_index { |k,i|
+          @trieSdb.addKey!( k )
+          @trieSdb.commit! if 0 == (i % 10000)
+        }
+        @trieSdb.commit!
       }
-      @trieSdb.commit!
-    }
-    @arr << tms.to_a
+      @arr << tms.to_a
+    end
   end
 
   def sequential_jaro( )
@@ -285,13 +184,14 @@ class TrieBench
     @arr << tms.to_a
 
     # "[SimpleDB]"
-    tms = Benchmark.measure ("simpleDB: fuzzy_search") {
-      data = @trieSdb.fuzzySearch( @jarowKey )
-      p data.size, data
-    }
-    @arr << tms.to_a
-    #puts "Info: aws-sdk is not installed(5)"
-
+    if @kvsSdb.enabled?
+      tms = Benchmark.measure ("simpleDB: fuzzy_search") {
+        data = @trieSdb.fuzzySearch( @jarowKey )
+        p data.size, data
+      }
+      @arr << tms.to_a
+      #puts "Info: aws-sdk is not installed(5)"
+    end
   end
 
   def printResult( )
@@ -325,9 +225,6 @@ def main( )
     trieBench = TrieBench.new( ARGV[1] )
     puts "load..."
     trieBench.load
-
-#    puts "sequential..."
-#    trieBench.sequential
 
     puts "sequential jaro..."
     trieBench.sequential_jaro
