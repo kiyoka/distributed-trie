@@ -42,23 +42,24 @@ module DistributedTrie
       def initialize( domainName )
         printf( "Amazon SimpleDB access_key_id:     %s\n", ENV['AMAZON_ACCESS_KEY_ID'])
         printf( "Amazon SimpleDB secret_access_key: %s\n", ENV['AMAZON_SECRET_ACCESS_KEY'])
-        db = AWS::SimpleDB.new(
+        @db = AWS::SimpleDB.new(
                                :access_key_id      => ENV['AMAZON_ACCESS_KEY_ID'],
                                :secret_access_key  => ENV['AMAZON_SECRET_ACCESS_KEY'],
                                :simple_db_endpoint => 'sdb.ap-northeast-1.amazonaws.com',
                                :use_ssl            => false )
-        @domain = db.domains.create( domainName )
+        @domain = @db.domains.create( domainName )
       end
       def put!( key, value, timeout = 0 )
         item = @domain.items[ key ]
-        item.attributes[ 'key' ] = value.force_encoding("ASCII-8BIT")
-        puts "simpleDB: " + key
+        item.attributes[ 'val' ] = value.force_encoding("ASCII-8BIT")
+        puts "simpleDB put: " + key
       end
       def get( key, fallback = false )
         item = @domain.items[ key ]
         if item
-          vals = item.attributes[ 'key' ].values
+          vals = item.attributes[ 'val' ].values
           if vals[0]
+            puts "simpleDB get: " + key + "," + vals[0]
             vals[0].force_encoding("UTF-8")
           else
             fallback
@@ -68,6 +69,8 @@ module DistributedTrie
         end
       end
       def enabled?()   true   end
+
+      attr_reader :db
     end
   rescue LoadError
     class KvsSdb < KvsBase

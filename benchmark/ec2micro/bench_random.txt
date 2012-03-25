@@ -1,0 +1,4 @@
+                     memcache: load:     0.00    0.00    0.00
+                     simpleDB: load:     0.00    0.00    0.00
+      memcache: random_fuzzy_search:   319.95    4.24  350.85
+      simpleDB: random_fuzzy_search:   357.19    5.55 6976.74

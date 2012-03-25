@@ -22,7 +22,7 @@ class TrieBench
 
   DBM_PATH    = '/tmp/distributed-trie.db'
   TCH_PATH    = '/tmp/distributed-trie.tch'
-  DOMAIN_NAME = 'triebench2'
+  DOMAIN_NAME = 'triebench'
 
   def initialize( filename )
     @data = open( filename ) {|f|
@@ -56,15 +56,6 @@ class TrieBench
       @data.each { |k|   @kvsMemcache.put!( k, k ) }
     }
     @arr << tms.to_a
-
-    # SimpleDB
-    @kvsSdb       = DistributedTrie::KvsSdb.new( DOMAIN_NAME )
-    if @kvsSdb.enabled?
-      tms = Benchmark.measure ("simpleDB: setup") {
-        @data.each { |k|   @kvsSdb.put!( k, k ) }
-      }
-      @arr << tms.to_a
-    end
   end
 
   def load( )
@@ -139,19 +130,31 @@ class TrieBench
     }
     @arr << tms.to_a
 
-    # SimpleDB
+  end
+
+  def setup_simpledb( )
+    require 'pp'
+
+    @kvsSdb       = DistributedTrie::KvsSdb.new( DOMAIN_NAME )
     if @kvsSdb.enabled?
-      @trieSdb  = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
-      tms = Benchmark.measure ("simpleDB: setup_trie") {
-        @data.each_with_index { |k,i|
-          @trieSdb.addKey!( k )
-          @trieSdb.commit! if 0 == (i % 10000)
+      items = []
+      @kvsTc.db.keys.each_with_index { |key,i|
+
+        val = @kvsTc.db[key]
+        h = {
+          :name => key,
+          :attributes => [{ :name => 'val', :value => val }]
         }
-        @trieSdb.commit!
+        items << h
+        if ( i % 20 ) == 0
+          pp i
+          @kvsSdb.db.client.batch_put_attributes(:domain_name => DOMAIN_NAME, :items => items )
+          items = []
+        end
       }
-      @arr << tms.to_a
     end
   end
+
 
   def sequential_jaro( )
     # "[Tokyo Cabinet]"
@@ -265,6 +268,9 @@ def main( )
 
     puts "setup trie..."
     trieBench.setup_trie
+
+    puts "setup simpleDB..."
+    trieBench.setup_simpledb
 
   when "main"
     trieBench = TrieBench.new( ARGV[1] )

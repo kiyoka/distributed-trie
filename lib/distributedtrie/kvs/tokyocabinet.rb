@@ -44,5 +44,8 @@ module DistributedTrie
       @db = TokyoCabinet::HDB.new( )
       @db.open( dbFilename, TokyoCabinet::HDB::OWRITER | TokyoCabinet::HDB::OCREAT )
     end
+
+    attr_reader :db
+
   end
 end

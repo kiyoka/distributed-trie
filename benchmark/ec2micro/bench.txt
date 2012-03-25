@@ -1,0 +1,9 @@
+                          dbm: load:     0.00    0.00    0.00
+                           tc: load:     0.00    0.00    0.00
+                     memcache: load:     0.00    0.00    0.00
+                     simpleDB: load:     0.00    0.00    0.00
+                tc: sequential_jaro:     7.06    0.00    7.08
+                  dbm: fuzzy_search:     0.17    0.00    0.19
+                   tc: fuzzy_search:     0.18    0.00    0.19
+             memcache: fuzzy_search:     0.19    0.00    0.22
+             simpleDB: fuzzy_search:     4.36    0.09  193.34
