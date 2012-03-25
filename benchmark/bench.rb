@@ -265,7 +265,7 @@ end
 def main( )
   case ARGV[0]
   when "setup"
-    treBench = TrieBench.new( ARGV[1] )
+    trieBench = TrieBench.new( ARGV[1] )
     puts "setup..."
     trieBench.setup
 
