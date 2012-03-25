@@ -1,0 +1,6 @@
+threshold :     0.93
+filename  :  ./data/aspell.dump.txt
+                     memcache: load:     0.00    0.00    0.00
+                     simpleDB: load:     0.00    0.00    0.00
+      memcache: random_fuzzy_search:    21.94    0.34   38.95
+      simpleDB: random_fuzzy_search:    63.66    1.06 1222.85

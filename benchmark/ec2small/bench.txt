@@ -1,0 +1,11 @@
+threshold :     0.93
+filename  :  ./data/aspell.dump.txt
+                          dbm: load:     0.00    0.00    0.00
+                           tc: load:     0.00    0.00    0.00
+                     memcache: load:     0.00    0.00    0.00
+                     simpleDB: load:     0.00    0.00    0.00
+                tc: sequential_jaro:     7.25    0.00   16.19
+                  dbm: fuzzy_search:     0.01    0.00    0.02
+                   tc: fuzzy_search:     0.10    0.00    0.11
+             memcache: fuzzy_search:     0.01    0.00    0.02
+             simpleDB: fuzzy_search:     0.08    0.00    1.85
