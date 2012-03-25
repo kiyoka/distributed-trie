@@ -25,6 +25,7 @@ class TrieBench
   DOMAIN_NAME = 'triebench'
 
   def initialize( filename )
+    @filename = filename
     @data = open( filename ) {|f|
       f.map {|line|
         line.chomp!
@@ -170,24 +171,25 @@ class TrieBench
     @arr << tms.to_a
   end
 
+  THRE = 0.92
   def fuzzy_search( )
     # "[dbm]"
     tms = Benchmark.measure ("dbm: fuzzy_search") {
-      data = @trieDbm.fuzzySearch( @jarowKey ) 
+      data = @trieDbm.fuzzySearch( @jarowKey, THRE )
       p data.size, data
     }
     @arr << tms.to_a
 
     # "[Tokyo Cabinet]"
     tms = Benchmark.measure ("tc: fuzzy_search") {
-      data = @trieTc.fuzzySearch( @jarowKey )
+      data = @trieTc.fuzzySearch( @jarowKey, THRE )
       p data.size, data
     }
     @arr << tms.to_a
 
     # "[Memcached]"
     tms = Benchmark.measure ("memcache: fuzzy_search") {
-      data = @trieMemcache.fuzzySearch( @jarowKey )
+      data = @trieMemcache.fuzzySearch( @jarowKey, THRE )
       p data.size, data
     }
     @arr << tms.to_a
@@ -195,7 +197,7 @@ class TrieBench
     # "[SimpleDB]"
     if @kvsSdb.enabled?
       tms = Benchmark.measure ("simpleDB: fuzzy_search") {
-        data = @trieSdb.fuzzySearch( @jarowKey )
+        data = @trieSdb.fuzzySearch( @jarowKey, THRE )
         p data.size, data
       }
       @arr << tms.to_a
@@ -211,30 +213,30 @@ class TrieBench
       random_data << @data[i * 100]
     }
     p random_data
-    
+
     if not parallel
       # "[dbm]"
       tms = Benchmark.measure ("dbm: random_fuzzy_search") {
-        random_data.each { |x|  @trieDbm.fuzzySearch( x ) }
+        random_data.each { |x|  @trieDbm.fuzzySearch( x, THRE ) }
       }
       @arr << tms.to_a
-      
+
       # "[Tokyo Cabinet]"
       tms = Benchmark.measure ("tc: random_fuzzy_search") {
-        random_data.each { |x| @trieTc.fuzzySearch( x ) }
+        random_data.each { |x| @trieTc.fuzzySearch( x, THRE ) }
       }
       @arr << tms.to_a
     else
       # "[Memcached]"
       tms = Benchmark.measure ("memcache: random_fuzzy_search") {
-        random_data.each { |x| @trieMemcache.fuzzySearch( x ) }
+        random_data.each { |x| @trieMemcache.fuzzySearch( x, THRE ) }
       }
       @arr << tms.to_a
-      
+
       # "[SimpleDB]"
       if @kvsSdb.enabled?
         tms = Benchmark.measure ("simpleDB: random_fuzzy_search") {
-          random_data.each { |x| @trieSdb.fuzzySearch( x ) }
+          random_data.each { |x| @trieSdb.fuzzySearch( x, THRE ) }
         }
         @arr << tms.to_a
         #puts "Info: aws-sdk is not installed(5)"
@@ -243,6 +245,8 @@ class TrieBench
   end
 
   def printResult( )
+    printf( "threshold :  %7.2f\n", THRE )
+    printf( "filename  :  %s\n",    @filename )
     @arr.each { |elem|
       printf( "%35s:  %7.2f %7.2f %7.2f\n", elem[ 0 ], elem[ 1 ], elem[ 2 ], elem[ 5 ] )
     }
@@ -262,7 +266,7 @@ end
 def main( )
   case ARGV[0]
   when "setup"
-    trieBench = TrieBench.new( ARGV[1] )
+    treBench = TrieBench.new( ARGV[1] )
     puts "setup..."
     trieBench.setup
 
