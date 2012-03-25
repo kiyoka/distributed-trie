@@ -171,7 +171,7 @@ class TrieBench
     @arr << tms.to_a
   end
 
-  THRE = 0.92
+  THRE = 0.93
   def fuzzy_search( )
     # "[dbm]"
     tms = Benchmark.measure ("dbm: fuzzy_search") {
@@ -239,7 +239,6 @@ class TrieBench
           random_data.each { |x| @trieSdb.fuzzySearch( x, THRE ) }
         }
         @arr << tms.to_a
-        #puts "Info: aws-sdk is not installed(5)"
       end
     end
   end
