@@ -3,9 +3,27 @@ filename  :  ./data/aspell.dump.txt
                           dbm: load:     0.00    0.00    0.00
                            tc: load:     0.00    0.00    0.00
                      memcache: load:     0.00    0.00    0.00
-                     simpleDB: load:     0.00    0.00    0.00
-                tc: sequential_jaro:     7.25    0.00   16.19
-                  dbm: fuzzy_search:     0.01    0.00    0.02
-                   tc: fuzzy_search:     0.10    0.00    0.11
+                     SimpleDB: load:     0.00    0.00    0.00
+                     DynamoDB: load:     0.00    0.00    0.00
+                tc: sequential_jaro:     7.46   -0.29   14.54
+                  dbm: fuzzy_search:     0.00    0.01    0.01
+                   tc: fuzzy_search:     0.00    0.01    0.01
+             memcache: fuzzy_search:     0.00    0.02    0.08
+             SimpleDB: fuzzy_search:     0.00    0.10    2.08
+             DynamoDB: fuzzy_search:     0.03    0.08    3.43   <= read capacity unit = 10
+
+threshold :     0.93
+filename  :  ./data/aspell.dump.txt
+                          dbm: load:     0.00    0.00    0.00
+                           tc: load:     0.00    0.00    0.00
+                     memcache: load:     0.00    0.00    0.00
+                     SimpleDB: load:     0.00    0.00    0.00
+                     DynamoDB: load:     0.00    0.00    0.00
+                tc: sequential_jaro:     7.13   -0.02   14.28
+                  dbm: fuzzy_search:     0.06    0.00    0.07
+                   tc: fuzzy_search:     0.01    0.00    0.01
              memcache: fuzzy_search:     0.01    0.00    0.02
-             simpleDB: fuzzy_search:     0.08    0.00    1.85
+             SimpleDB: fuzzy_search:     0.08    0.00    1.90
+             DynamoDB: fuzzy_search:     0.24    0.00    3.59   <= read capacity unit = 20
+             DynamoDB: fuzzy_search:     0.11    0.00    3.73   <= read capacity unit = 40
+             DynamoDB: fuzzy_search:     0.11    0.00    2.63   <= read capacity unit = 80
