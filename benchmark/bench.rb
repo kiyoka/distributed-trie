@@ -16,7 +16,9 @@ require 'distributedtrie/kvs/dbm'
 require 'distributedtrie/kvs/tokyocabinet'
 require 'distributedtrie/kvs/memcache'
 require 'distributedtrie/kvs/simpledb'
+require 'distributedtrie/kvs/dynamodb'
 require 'benchmark'
+require 'pp'
 
 class TrieBench
 
@@ -90,8 +92,17 @@ class TrieBench
     # SimpleDB
     @kvsSdb       = DistributedTrie::KvsSdb.new( DOMAIN_NAME )
     if @kvsSdb.enabled?
-      tms = Benchmark.measure ("simpleDB: load") {
+      tms = Benchmark.measure ("SimpleDB: load") {
         @trieSdb      = DistributedTrie::Trie.new( @kvsSdb,   "BENCH::" )
+      }
+      @arr << tms.to_a
+    end
+
+    # DynamoDB
+    @kvsDydb       = DistributedTrie::KvsDydb.new( DOMAIN_NAME )
+    if @kvsDydb.enabled?
+      tms = Benchmark.measure ("DynamoDB: load") {
+        @trieDydb      = DistributedTrie::Trie.new( @kvsDydb,   "BENCH::" )
       }
       @arr << tms.to_a
     end
@@ -134,8 +145,6 @@ class TrieBench
   end
 
   def setup_simpledb( )
-    require 'pp'
-
     @kvsSdb       = DistributedTrie::KvsSdb.new( DOMAIN_NAME )
     if @kvsSdb.enabled?
       items = []
@@ -151,6 +160,19 @@ class TrieBench
           pp i
           @kvsSdb.db.client.batch_put_attributes(:domain_name => DOMAIN_NAME, :items => items )
           items = []
+        end
+      }
+    end
+  end
+
+  def setup_dynamodb( )
+    @kvsDydb       = DistributedTrie::KvsDydb.new( DOMAIN_NAME )
+    if @kvsDydb.enabled?
+      items = []
+      @kvsTc.db.keys.each_with_index { |key,i|
+        @kvsDydb.put!( key, @kvsTc.get( key ))
+        if ( i % 100 ) == 0
+          p i
         end
       }
     end
@@ -196,12 +218,20 @@ class TrieBench
 
     # "[SimpleDB]"
     if @kvsSdb.enabled?
-      tms = Benchmark.measure ("simpleDB: fuzzy_search") {
+      tms = Benchmark.measure ("SimpleDB: fuzzy_search") {
         data = @trieSdb.fuzzySearch( @jarowKey, THRE )
         p data.size, data
       }
       @arr << tms.to_a
-      #puts "Info: aws-sdk is not installed(5)"
+    end
+
+    # "[DynamoDB]"
+    if @kvsDydb.enabled?
+      tms = Benchmark.measure ("DynamoDB: fuzzy_search") {
+        data = @trieDydb.fuzzySearch( @jarowKey, THRE )
+        p data.size, data
+      }
+      @arr << tms.to_a
     end
   end
 
@@ -235,8 +265,16 @@ class TrieBench
 
       # "[SimpleDB]"
       if @kvsSdb.enabled?
-        tms = Benchmark.measure ("simpleDB: random_fuzzy_search") {
+        tms = Benchmark.measure ("SimpleDB: random_fuzzy_search") {
           random_data.each { |x| @trieSdb.fuzzySearch( x, THRE ) }
+        }
+        @arr << tms.to_a
+      end
+
+      # "[DynamoDB]"
+      if @kvsDydb.enabled?
+        tms = Benchmark.measure ("DynamoDB: random_fuzzy_search") {
+          random_data.each { |x| @trieDydb.fuzzySearch( x, THRE ) }
         }
         @arr << tms.to_a
       end
@@ -272,8 +310,11 @@ def main( )
     puts "setup trie..."
     trieBench.setup_trie
 
-    puts "setup simpleDB..."
+    puts "setup SimpleDB..."
     trieBench.setup_simpledb
+
+    puts "setup DynamoDB..."
+    trieBench.setup_dynamodb
 
   when "main"
     trieBench = TrieBench.new( ARGV[1] )
