@@ -1,11 +1,29 @@
-threshold :     0.92
+threshold :     0.93
 filename  :  ./data/aspell.dump.txt
                           dbm: load:     0.00    0.00    0.00
                            tc: load:     0.00    0.00    0.00
-                     memcache: load:     0.00    0.00    0.01
-                     simpleDB: load:     0.00    0.00    0.00
-                tc: sequential_jaro:     7.21    0.02    7.25
-                  dbm: fuzzy_search:     0.01    0.00    0.02
-                   tc: fuzzy_search:     0.02    0.00    0.02
-             memcache: fuzzy_search:     0.02    0.00    0.02
-             simpleDB: fuzzy_search:     0.13    0.00    2.71
+                     memcache: load:     0.00    0.00    0.00
+                     SimpleDB: load:     0.00    0.00    0.00
+                     DynamoDB: load:     0.00    0.00    0.00
+                tc: sequential_jaro:   216.99    0.00  218.08
+                  dbm: fuzzy_search:     0.01    0.00    0.01
+                   tc: fuzzy_search:     0.01    0.00    0.01
+             memcache: fuzzy_search:     0.01    0.00    0.02
+             SimpleDB: fuzzy_search:     0.08    0.00    1.75
+             DynamoDB: fuzzy_search:     0.09    0.00    3.77   <= read capacity unit = 5
+
+threshold :     0.93
+filename  :  ./data/aspell.dump.txt
+                          dbm: load:     0.00    0.00    0.00
+                           tc: load:     0.00    0.00    0.01
+                     memcache: load:     0.00    0.00    0.00
+                     SimpleDB: load:     0.00    0.00    0.00
+                     DynamoDB: load:     0.00    0.00    0.00
+                tc: sequential_jaro:   118.78    0.00  120.33
+                  dbm: fuzzy_search:     0.01    0.00    0.01
+                   tc: fuzzy_search:     0.01    0.00    0.01
+             memcache: fuzzy_search:     0.01    0.00    0.02
+             SimpleDB: fuzzy_search:     0.07    0.00    2.19
+             DynamoDB: fuzzy_search:     0.10    0.00    4.23   <= read capacity unit = 10
+
+
