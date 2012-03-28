@@ -79,6 +79,7 @@ module DistributedTrie
     end
   rescue LoadError
     class KvsSdb < KvsBase
+      def initialize( domainName ) end
       def enabled?()   false  end
     end
   end

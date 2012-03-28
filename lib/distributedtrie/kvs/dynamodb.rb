@@ -74,6 +74,7 @@ module DistributedTrie
     end
   rescue LoadError
     class KvsDydb < KvsBase
+      def initialize( tableName ) end
       def enabled?()   false  end
     end
   end
