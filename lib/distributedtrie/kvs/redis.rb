@@ -1,5 +1,5 @@
 #
-#                        Distributed Trie / KvsIFs
+#                        Distributed Trie / KvsRedis
 #
 #
 #   Copyright (c) 2012  Kiyoka Nishiyama  <kiyoka@sumibi.org>
@@ -32,24 +32,14 @@
 #   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-require 'distributedtrie/kvsif'
+require 'redis'
 module DistributedTrie
 
-  # pure hash implementation
-  class KvsBase < DistributedTrie::KvsIf
-    def put!( key, value, timeout = 0 )
-      @db[ key.force_encoding("ASCII-8BIT") ] = value.force_encoding("ASCII-8BIT")
+  # Tokyo Cabinet implementation
+  class KvsRedis < KvsBase
+    def initialize( hostname = "localhost" )
+      @db = Redis.new( :host => hostname )
+      @db
     end
-
-    def get( key, fallback = false )
-      val = @db[ key ]
-      if val
-        val.force_encoding("UTF-8")
-      else
-        fallback
-      end
-    end
-
-    def enabled?()  true  end
   end
 end

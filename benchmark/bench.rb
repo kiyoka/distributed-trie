@@ -17,6 +17,7 @@ require 'distributedtrie/kvs/tokyocabinet'
 require 'distributedtrie/kvs/memcache'
 require 'distributedtrie/kvs/simpledb'
 require 'distributedtrie/kvs/dynamodb'
+require 'distributedtrie/kvs/redis'
 require 'benchmark'
 require 'pp'
 
@@ -59,6 +60,13 @@ class TrieBench
       @data.each { |k|   @kvsMemcache.put!( k, k ) }
     }
     @arr << tms.to_a
+
+    # Redis
+    tms = Benchmark.measure ("Redis: setup") {
+      @kvsRedis  = DistributedTrie::KvsRedis.new
+      @data.each { |k|   @kvsRedis.put!( k, k ) }
+    }
+    @arr << tms.to_a
   end
 
   def load( )
@@ -88,6 +96,15 @@ class TrieBench
       @trieMemcache = DistributedTrie::Trie.new( @kvsMemcache,   "BENCH::" )
     }
     @arr << tms.to_a
+
+    # Redis
+    @kvsRedis      = DistributedTrie::KvsRedis.new
+    if @kvsRedis.enabled?
+      tms = Benchmark.measure ("Redis: load") {
+        @trieRedis     = DistributedTrie::Trie.new( @kvsRedis,   "BENCH::" )
+      }
+      @arr << tms.to_a
+    end
 
     # SimpleDB
     @kvsSdb       = DistributedTrie::KvsSdb.new( DOMAIN_NAME )
@@ -142,6 +159,16 @@ class TrieBench
     }
     @arr << tms.to_a
 
+    # Redis
+    @trieRedis  = DistributedTrie::Trie.new( @kvsRedis,   "BENCH::" )
+    tms = Benchmark.measure ("Redis: setup_trie") {
+      @data.each_with_index { |k,i|
+        @trieRedis.addKey!( k )
+        @trieRedis.commit! if 0 == (i % 10000)
+      }
+      @trieRedis.commit!
+    }
+    @arr << tms.to_a
   end
 
   def setup_simpledb( )
@@ -216,6 +243,13 @@ class TrieBench
     }
     @arr << tms.to_a
 
+    # "[Redis]"
+    tms = Benchmark.measure ("Redis: fuzzy_search") {
+      data = @trieRedis.fuzzySearch( @jarowKey, THRE )
+      p data.size, data
+    }
+    @arr << tms.to_a
+
     # "[SimpleDB]"
     if @kvsSdb.enabled?
       tms = Benchmark.measure ("SimpleDB: fuzzy_search") {
@@ -260,6 +294,12 @@ class TrieBench
       # "[Memcached]"
       tms = Benchmark.measure ("memcache: random_fuzzy_search") {
         random_data.each { |x| @trieMemcache.fuzzySearch( x, THRE ) }
+      }
+      @arr << tms.to_a
+
+      # "[Redis]"
+      tms = Benchmark.measure ("Redis: random_fuzzy_search") {
+        random_data.each { |x| @trieRedis.fuzzySearch( x, THRE ) }
       }
       @arr << tms.to_a
 
