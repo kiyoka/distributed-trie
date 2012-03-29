@@ -1,10 +1,15 @@
-~/work/github/distributed-trie $ rake bench_setup
-ruby -I ./lib ./benchmark/bench.rb  setup ./data/aspell.dump.txt
+ruby -I ./lib ./benchmark/bench.rb  setup  ./data/aspell.dump.txt
 setup...
 setup trie...
-                         dbm: setup:     0.62    1.26    1.90
-                          tc: setup:     0.33    0.06    1.15
-                    memcache: setup:    18.10    3.80   25.62
-                    dbm: setup_trie:    38.59    2.55   41.55
-                     tc: setup_trie:    38.37    0.21   40.23
-               memcache: setup_trie:   114.43   13.01  144.08
+setup SimpleDB...
+setup DynamoDB...
+threshold :     0.93
+filename  :  ./data/aspell.dump.txt
+                         dbm: setup:     0.60    1.24    2.00
+                          tc: setup:     0.31    0.01    0.33
+                    memcache: setup:    17.02    3.48   27.66
+                       Redis: setup:     4.13    2.40   15.13
+                    dbm: setup_trie:    36.57    2.69   43.39
+                     tc: setup_trie:    38.86    0.47   48.63
+               memcache: setup_trie:   122.49   13.29  200.71
+                  Redis: setup_trie:    51.40    8.74   99.38
