@@ -23,12 +23,10 @@
 * distributed-trie gem only manage trie data structure.
 * You should manage your application data which corresponds to trie key.
 
-![Figure](img/distributed-trie-arch.half.png)
-
+  ![Figure](/img/distributed-trie-arch.half.png)
 
 ## Sample code
 
-<code>
     require 'distributedtrie'
     require 'distributedtrie/kvs/tokyocabinet'
     kvsTc = DistributedTrie::KvsTc.new( '/tmp/distributed-trie.tch' )
@@ -42,7 +40,6 @@
     result = trie.fuzzySearch( "apppp" )
     print result;
     # =>  [ "apple", "application" ]
-</code>
 
 ## Requires
  - Ruby 1.9.1 or higher
