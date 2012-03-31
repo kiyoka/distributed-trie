@@ -274,7 +274,7 @@ class TrieBench
     step = len / 100
     random_data = []
     100.times{ |i|
-      random_data << @data[i * 100]
+      random_data << @data[i * step]
     }
     p random_data
 
