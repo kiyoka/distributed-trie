@@ -1,0 +1,12 @@
+
+(for-each
+ (lambda (line)
+   #?=line
+   (let* (
+          [keyword-part (to-list (line.chomp.split #/\t/))]
+          [keywords (. (second keyword-part) split)])
+     (for-each
+      print
+      keywords)))
+ STDIN)
+
