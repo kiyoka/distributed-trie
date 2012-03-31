@@ -2,7 +2,7 @@
 
 * distributed-trie is a trie library on key-value store.
 * It is scalable.
-* It supports Tokyo Cabinet / memcache / gdbm / simpleDB / ruby's pure hash
+* It supports Tokyo Cabinet / memcached / gdbm / ruby's pure hash / Redis
 
 ## The reason why i developed 
 * I need a trie library for Sekka ( japanese input method ).
@@ -19,16 +19,23 @@
 * fuzzySearch by jaro winker edit distance.
 * search with user-defined-function.
 
-## Sample code 
+## Architecture
+* distributed-trie gem only manage trie data structure.
+* You should manage your application data which corresponds to trie key.
+
+![Figure](img/distributed-trie-arch.half.png)
+
+
+## Sample code
 
 <code>
     require 'distributedtrie'
     require 'distributedtrie/kvs/tokyocabinet'
     kvsTc = DistributedTrie::KvsTc.new( '/tmp/distributed-trie.tch' )
     trie = DistributedTrie::Trie.create( kvsTc, "Sample::" )
-    trie.addKey!( "apple",       10 )
-    trie.addKey!( "application", 20 )
-    trie.addKey!( "orange",      30 )
+    trie.addKey!( "apple"       )
+    trie.addKey!( "application" )
+    trie.addKey!( "orange"      )
     result = trie.commonPrefixSearch( "app" )
     print result;
     # =>  [ "apple", "application" ]
