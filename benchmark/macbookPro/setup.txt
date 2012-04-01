@@ -13,3 +13,21 @@ filename  :  ./data/aspell.dump.txt
                      tc: setup_trie:    38.86    0.47   48.63
                memcache: setup_trie:   122.49   13.29  200.71
                   Redis: setup_trie:    51.40    8.74   99.38
+
+
+
+ruby -I ./lib ./benchmark/bench.rb  setup  ./data/sekka_roman_of_kanjidata.txt
+setup...
+setup trie...
+setup SimpleDB...
+setup DynamoDB...
+threshold :     0.93
+filename  :  ./data/sekka_roman_of_kanjidata.txt
+                         dbm: setup:    16.19   32.78  100.47
+                          tc: setup:    16.13   17.13   36.62
+                    memcache: setup:   942.38   97.78 1460.62
+                       Redis: setup:   107.62   59.79  418.11
+                    dbm: setup_trie:  1312.48  317.88 23427.87
+                     tc: setup_trie:  1235.54  180.59 2484.02
+               memcache: setup_trie:  5599.55  423.32 7652.67
+                  Redis: setup_trie:  1631.90  275.84 4704.52
