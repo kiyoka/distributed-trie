@@ -11,7 +11,7 @@
 
 require 'rake'
 begin
-  require 'jeweler'
+  require 'jeweler2'
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "distributed-trie"
     gemspec.summary = "distributed-trie is a trie library on key-value store."
@@ -23,7 +23,10 @@ begin
                     'Rakefile',
                     '.gemtest',
                     'VERSION.yml',
+                    'README.md',
+                    'COPYING',
                     'lib/**/*.rb',
+                    'lib/*.png',
                     'test/*'
                       ].to_a
     gemspec.add_development_dependency "rake"
@@ -31,7 +34,7 @@ begin
     gemspec.add_dependency( "fuzzy-string-match", ">= 0.9.3" )
   end
 rescue LoadError
-  puts 'Jeweler not available. If you want to build a gemfile, please install with "sudo gem install jeweler"'
+  puts 'Jeweler2 not available. If you want to build a gemfile, please install with "sudo gem install jeweler2"'
 end
 
 task :default => [:test] do

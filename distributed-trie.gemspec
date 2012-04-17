@@ -9,16 +9,25 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kiyoka Nishiyama"]
-  s.date = "2012-03-20"
+  s.date = "2012-04-17"
   s.description = "distributed-trie is a trie library on key-value store."
   s.email = "kiyoka@sumibi.org"
   s.extra_rdoc_files = [
     "README.md"
   ]
   s.files = [
+    "COPYING",
+    "README.md",
     "Rakefile",
     "VERSION.yml",
     "lib/distributedtrie.rb",
+    "lib/distributedtrie/kvs/base.rb",
+    "lib/distributedtrie/kvs/dbm.rb",
+    "lib/distributedtrie/kvs/dynamodb.rb",
+    "lib/distributedtrie/kvs/memcache.rb",
+    "lib/distributedtrie/kvs/redis.rb",
+    "lib/distributedtrie/kvs/simpledb.rb",
+    "lib/distributedtrie/kvs/tokyocabinet.rb",
     "lib/distributedtrie/kvsif.rb",
     "lib/distributedtrie/trie.rb",
     "test/bigdata_spec.rb",
@@ -28,7 +37,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/kiyoka/distributed-trie"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.17"
+  s.rubygems_version = "1.8.21"
   s.summary = "distributed-trie is a trie library on key-value store."
 
   if s.respond_to? :specification_version then
@@ -38,12 +47,21 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rake>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_runtime_dependency(%q<fuzzy-string-match>, [">= 0.9.3"])
+      s.add_development_dependency(%q<rake>, [">= 0"])
+      s.add_development_dependency(%q<rspec>, [">= 0"])
+      s.add_runtime_dependency(%q<fuzzy-string-match>, [">= 0.9.3"])
     else
+      s.add_dependency(%q<rake>, [">= 0"])
+      s.add_dependency(%q<rspec>, [">= 0"])
+      s.add_dependency(%q<fuzzy-string-match>, [">= 0.9.3"])
       s.add_dependency(%q<rake>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<fuzzy-string-match>, [">= 0.9.3"])
     end
   else
+    s.add_dependency(%q<rake>, [">= 0"])
+    s.add_dependency(%q<rspec>, [">= 0"])
+    s.add_dependency(%q<fuzzy-string-match>, [">= 0.9.3"])
     s.add_dependency(%q<rake>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<fuzzy-string-match>, [">= 0.9.3"])
