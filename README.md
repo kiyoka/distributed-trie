@@ -31,10 +31,11 @@
     require 'distributedtrie'
     require 'distributedtrie/kvs/tokyocabinet'
     kvsTc = DistributedTrie::KvsTc.new( '/tmp/distributed-trie.tch' )
-    trie = DistributedTrie::Trie.create( kvsTc, "Sample::" )
+    trie = DistributedTrie::Trie.new( kvsTc, "Sample::" )
     trie.addKey!( "apple"       )
     trie.addKey!( "application" )
     trie.addKey!( "orange"      )
+    trie.commit!
     result = trie.commonPrefixSearch( "app" )
     print result;
     # =>  [ "apple", "application" ]
