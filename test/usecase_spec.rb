@@ -78,19 +78,27 @@ describe Trie, "when you create fuzzy-string-search application " do
     @kvs   = DistributedTrie::KvsIf.new
     @trie  = Trie.new( @kvs, "TEST::" )
     @words = [
-      "communication",
-      "community",
-      "command",
-      "comedy",
-      "coming",
-      "code",
-      "copy",
-      "copyright"
-    ]
+              "communication",
+              "community",
+              "command",
+              "comedy",
+              "coming",
+              "code",
+              "copy",
+              "copyright"
+             ]
+    @words2 = [
+               "henkan",
+               "henkann",
+               "henka",
+               "hennka",
+               "henkaq",
+              ]
   end
 
   it "should" do
-    @words.each { |word|  @trie.addKey!( word ) }
+    @words.each  { |word|  @trie.addKey!( word ) }
+    @words2.each { |word|  @trie.addKey!( word ) }
     @trie.commit!
 
     _roundDistance( @trie.fuzzySearch( "come"           )).should    == [[0.933, "comedy"]]
@@ -105,10 +113,14 @@ describe Trie, "when you create fuzzy-string-search application " do
     _roundDistance( @trie.fuzzySearch( "copyrigh"     , 0.99  )).should    == [[0.993, "copyright"]]
     _roundDistance( @trie.fuzzySearch( "copyleft"             )).should    == [[0.9, "copy"]]
 
+    _roundDistance( @trie.fuzzySearch( "henkan"       , 0.94  )).should    == [[1.0, "henkan"], [0.981, "henkann"], [0.972, "henka"], [0.961, "hennka"], [0.944, "henkaq"]]
+
     jarow = FuzzyStringMatch::JaroWinkler.create( )
-    @words.select { |word| 0.85 <= jarow.getDistance( word, "come" )          }.should == ["comedy", "code"]
-    @words.select { |word| 0.90 <= jarow.getDistance( word, "copylight" )     }.should == ["copyright"]
-    @words.select { |word| 0.92 <= jarow.getDistance( word, "communication" ) }.should == ["communication", "community"]
-    @words.select { |word| 0.90 <= jarow.getDistance( word, "copyleft" )      }.should == ["copy"]
+    @words.select  { |word| 0.85 <= jarow.getDistance( word, "come" )          }.should == ["comedy", "code"]
+    @words.select  { |word| 0.90 <= jarow.getDistance( word, "copylight" )     }.should == ["copyright"]
+    @words.select  { |word| 0.92 <= jarow.getDistance( word, "communication" ) }.should == ["communication", "community"]
+    @words.select  { |word| 0.90 <= jarow.getDistance( word, "copyleft" )      }.should == ["copy"]
+
+    @words2.select { |word| 0.94 <  jarow.getDistance( word, "henkan" )        }.should == ["henkan", "henkann", "henka", "hennka", "henkaq"]
   end
 end
