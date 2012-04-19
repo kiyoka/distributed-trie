@@ -143,8 +143,13 @@ module DistributedTrie
           }
         end
         result = jarow.getDistance( x, _word )
-        #require 'pp'
-        #pp [ "fuzzyString", result, x, _word, termFlag ]
+#        require 'pp'
+#        pp [ "fuzzyString(1)", result, x, _word, termFlag ]
+        if not termFlag
+          result *= 1.05  # magic pacent for jaroWinkler
+        end
+#        pp [ "fuzzyString(2)", result, x, _word, termFlag ]
+
         threshold <= result
       }
       result.map { |k| [ jarow.getDistance( searchWord, k ), k ] }.sort_by {|item| 1.0 - item[0]}
