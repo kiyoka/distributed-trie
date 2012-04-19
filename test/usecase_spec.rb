@@ -66,6 +66,13 @@ describe Trie, "when you create auto complete application " do
   end
 end
 
+def _roundDistance( arr )
+  arr.map { |x|
+    val = x[0] * 1000
+    [ val.round / 1000.0, x[1] ]
+  }
+end
+
 describe Trie, "when you create fuzzy-string-search application " do
   before do
     @kvs   = DistributedTrie::KvsIf.new
@@ -86,17 +93,17 @@ describe Trie, "when you create fuzzy-string-search application " do
     @words.each { |word|  @trie.addKey!( word ) }
     @trie.commit!
 
-    @trie.fuzzySearch( "come"           ).should    == ["comedy"]
-    @trie.fuzzySearch( "come",    0.85  ).should    == ["comedy", "code"]
-    @trie.fuzzySearch( "come",    0.82  ).should    == ["comedy", "coming", "code"]
-    @trie.fuzzySearch( "come",    0.80  ).should    == ["command", "comedy", "coming", "code"]
+    _roundDistance( @trie.fuzzySearch( "come"           )).should    == [[0.933, "comedy"]]
+    _roundDistance( @trie.fuzzySearch( "come",    0.85  )).should    == [[0.933, "comedy"], [0.867, "code"]]
+    _roundDistance( @trie.fuzzySearch( "come",    0.82  )).should    == [[0.933, "comedy"], [0.867, "code"], [0.825, "coming"]]
+    _roundDistance( @trie.fuzzySearch( "come",    0.80  )).should    == [[0.933, "comedy"], [0.867, "code"], [0.825, "coming"], [0.808, "command"]]
 
-    @trie.fuzzySearch( "comm"                 ).should    == ["command"]
-    @trie.fuzzySearch( "communication", 0.92  ).should    == ["communication", "community"]
+    _roundDistance( @trie.fuzzySearch( "comm"                 )).should    == [[0.914, "command"]]
+    _roundDistance( @trie.fuzzySearch( "communication", 0.92  )).should    == [[1.0, "communication"], [0.924, "community"]]
 
-    @trie.fuzzySearch( "copylight"            ).should    == ["copyright"]
-    @trie.fuzzySearch( "copyrigh"     , 0.99  ).should    == ["copyright"]
-    @trie.fuzzySearch( "copyleft"             ).should    == ["copy"]
+    _roundDistance( @trie.fuzzySearch( "copylight"            )).should    == [[0.956, "copyright"]]
+    _roundDistance( @trie.fuzzySearch( "copyrigh"     , 0.99  )).should    == [[0.993, "copyright"]]
+    _roundDistance( @trie.fuzzySearch( "copyleft"             )).should    == [[0.9, "copy"]]
 
     jarow = FuzzyStringMatch::JaroWinkler.create( )
     @words.select { |word| 0.85 <= jarow.getDistance( word, "come" )          }.should == ["comedy", "code"]

@@ -130,9 +130,10 @@ module DistributedTrie
       }
     end
 
+    # return: [ [distance, keyword], [distance, keyword], ... ]
     def fuzzySearch( searchWord, threshold = 0.90 )
       jarow = FuzzyStringMatch::JaroWinkler.create( )
-      search( '' ) { |x,termFlag|
+      result = search( '' ) { |x,termFlag|
         _word = searchWord
         if not termFlag and (x.size < searchWord.size)
           _word = searchWord[0...x.size]
@@ -146,6 +147,7 @@ module DistributedTrie
         #pp [ "fuzzyString", result, x, _word, termFlag ]
         threshold <= result
       }
+      result.map { |k| [ jarow.getDistance( searchWord, k ), k ] }.sort_by {|item| 1.0 - item[0]}
     end
 
     def _getNextLetters( node )
