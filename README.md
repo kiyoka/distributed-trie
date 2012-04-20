@@ -23,7 +23,7 @@
 * distributed-trie gem only manage trie data structure.
 * You should manage your application data which corresponds to trie key.
 
-![Figure]( http://pix.am/kvc8.png )
+![Figure]( http://pix.am/kYLz.png )
 
 
 ## Sample code
