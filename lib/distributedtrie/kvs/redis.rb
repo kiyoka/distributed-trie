@@ -32,6 +32,7 @@
 #   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
+require 'distributedtrie/kvs/base'
 require 'redis'
 module DistributedTrie
 

@@ -2,7 +2,7 @@
 
 * distributed-trie is a trie library on key-value store.
 * It is scalable.
-* It supports Tokyo Cabinet / memcached / gdbm / ruby's pure hash / Redis
+* It supports Tokyo Cabinet / memcached / gdbm / pure hash / Redis / DynamoDB / SimpleDB
 
 ## The reason why i developed 
 * I need a trie library for Sekka ( japanese input method ).
@@ -10,7 +10,8 @@
 * I need a trie library which can scale out.
 
 ## Installing 
-  1. gem install distributed-trie
+
+    gem install distributed-trie
 
 ## Features
 * Add    keyword to trie.
@@ -37,14 +38,15 @@
     trie.addKey!( "orange"      )
     trie.commit!
     result = trie.commonPrefixSearch( "app" )
-    print result;
+    print result
     # =>  [ "apple", "application" ]
-    result = trie.fuzzySearch( "apppp" )
-    print result;
-    # =>  [ "apple", "application" ]
+    result = trie.fuzzySearch( "app", 0.80 )
+    print result
+    # =>  [[0.9066666666666667, "apple"], [0.8236914600550963, "application"]]
 
 ## Requires
- - Ruby 1.9.1 or higher
+ - Ruby  1.9.1 or higher
+ - JRuby 1.6.6 or higher
  - fuzzy-string-match gem
 
 ## Author
@@ -55,4 +57,3 @@
 
 ## License
  - BSD License
-

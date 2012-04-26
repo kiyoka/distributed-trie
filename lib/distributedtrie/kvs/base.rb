@@ -36,7 +36,7 @@ require 'distributedtrie/kvsif'
 module DistributedTrie
 
   # pure hash implementation
-  class KvsBase < DistributedTrie::KvsIf
+  class KvsBase < KvsIf
     def put!( key, value, timeout = 0 )
       @db[ key.force_encoding("ASCII-8BIT") ] = value.force_encoding("ASCII-8BIT")
     end
