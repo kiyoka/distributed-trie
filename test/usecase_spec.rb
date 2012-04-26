@@ -113,7 +113,7 @@ describe Trie, "when you create fuzzy-string-search application " do
     _roundDistance( @trie.fuzzySearch( "copyrigh"     , 0.99  )).should    == [[0.993, "copyright"]]
     _roundDistance( @trie.fuzzySearch( "copyleft"             )).should    == [[0.9, "copy"]]
 
-    _roundDistance( @trie.fuzzySearch( "henkan"       , 0.94  )).should    == [[1.0, "henkan"], [0.981, "henkann"], [0.972, "henka"], [0.961, "hennka"], [0.944, "henkaq"]]
+    _roundDistance( @trie.fuzzySearch( "henkan"       , 0.94  )).should    == [[1.0, "henkan"], [0.981, "henkann"], [0.972, "henka"], [0.944, "henkaq"]]
 
     jarow = FuzzyStringMatch::JaroWinkler.create( )
     @words.select  { |word| 0.85 <= jarow.getDistance( word, "come" )          }.should == ["comedy", "code"]

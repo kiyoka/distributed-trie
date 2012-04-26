@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kiyoka Nishiyama"]
-  s.date = "2012-04-17"
+  s.date = "2012-04-22"
   s.description = "distributed-trie is a trie library on key-value store."
   s.email = "kiyoka@sumibi.org"
   s.extra_rdoc_files = [
@@ -38,7 +38,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/kiyoka/distributed-trie"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.21"
+  s.rubygems_version = "1.8.17"
   s.summary = "distributed-trie is a trie library on key-value store."
 
   if s.respond_to? :specification_version then
