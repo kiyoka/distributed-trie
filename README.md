@@ -1,5 +1,7 @@
 # What is distributed-trie
 
+![Logo]( http://pix.am/FeuT.png )
+
 * distributed-trie is a trie library for key-value store.
 * It is scalable ( with DHT system like DynamoDB )
 * It supports Tokyo Cabinet / memcached / gdbm / pure hash / Redis / DynamoDB / SimpleDB
